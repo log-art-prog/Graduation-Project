@@ -4,3 +4,6 @@ __pycache__/
 
 # 仿真输出图片（每次运行重新生成）
 leo_channel_simulator/output/*.png
+
+# 源代码物理快照（Git 内已有对应 commit，物理副本不再入库）
+leo_channel_simulator/snapshots/
