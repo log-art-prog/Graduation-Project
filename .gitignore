@@ -1,0 +1,6 @@
+# Python 缓存（每次运行自动生成）
+__pycache__/
+*.pyc
+
+# 仿真输出图片（每次运行重新生成）
+leo_channel_simulator/output/*.png
