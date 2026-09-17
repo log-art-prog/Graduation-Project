@@ -31,7 +31,7 @@ def main():
     RX_GAIN_DB = 35.0          # 接收天线增益 (dBi)
     NOISE_FIGURE_DB = 2.5      # 接收机噪声系数 (dB)
     RAIN_RATE_MMH = 2.0        # 降雨量 mm/h (小雨=2, 中雨=10, 暴雨=50)
-    
+    SEED=42
     # 2. 轨道参数
     PASS_DURATION_S = 600      # 过境时长 (秒)
     NUM_POINTS = 1000          # 仿真点数
@@ -94,7 +94,8 @@ def main():
         tx_eirp_dbm=TX_EIRP_DBM,
         rx_gain_db=RX_GAIN_DB,
         noise_figure_db=NOISE_FIGURE_DB,
-        rain_rate_mm_h=RAIN_RATE_MMH
+        rain_rate_mm_h=RAIN_RATE_MMH,
+        seed=SEED
     )
     
     # ==================== 单环境详细仿真 (以城郊为例) ====================

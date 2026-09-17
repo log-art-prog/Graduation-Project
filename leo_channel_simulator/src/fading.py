@@ -11,7 +11,8 @@ def generate_shadow_fading(
     decorrelation_distance_m: float = 50.0,
     velocity_ms: float = 7600.0,
     fs: float = 10.0,
-) -> np.ndarray:
+    rng: np.random.Generator =None,
+):
     """
     生成阴影衰落 (对数正态分布)
     使用一阶AR模型模拟空间相关性
@@ -19,7 +20,11 @@ def generate_shadow_fading(
     decorrelation_distance_m: 去相关距离
     velocity_ms: 移动速度 (m/s)
     fs: 采样率 (Hz)
+    rng: 随机数生成器，传入固定种子的生成器可保证结果可复现
     """
+    if rng is None:
+        rng = np.random.default_rng()
+
     # 相关系数：距离间隔d处的相关系数为 exp(-d/d_corr)
     dt = 1.0 / fs
     d_sample = velocity_ms * dt
@@ -27,10 +32,11 @@ def generate_shadow_fading(
     
     # AR(1)过程生成相关对数正态阴影
     shadow = np.zeros(num_samples)
-    shadow[0] = np.random.randn() * sigma_db
+    
+    shadow[0] = rng.standard_normal() * sigma_db
     
     for i in range(1, num_samples):
-        shadow[i] = rho * shadow[i-1] + np.sqrt(1 - rho**2) * np.random.randn() * sigma_db
+        shadow[i] = rho * shadow[i-1] + np.sqrt(1 - rho**2) * rng.standard_normal() * sigma_db
     
     return shadow
 
@@ -40,23 +46,28 @@ def generate_rayleigh_fading(
     fd_hz: float,
     fs: float,
     num_sinusoids: int = 20,
-) -> np.ndarray:
+    rng: np.random.Generator =None,
+):
     """
     生成瑞利衰落 (Jakes模型/正弦叠加法)
     fd_hz: 最大多普勒频移
     fs: 采样率
+    rng: 随机数生成器，传入固定种子的生成器可保证结果可复现
     """
+    if rng is None:
+        rng=np.random.default_rng()
+
     t = np.arange(num_samples) / fs
     
     # Clarke/Jakes模型：多个等幅、随机相位、均匀到达角的正弦波叠加
     x = np.zeros(num_samples)
     y = np.zeros(num_samples)
     
-    theta = np.random.uniform(0, 2 * np.pi)
+    theta = rng.uniform(0, 2 * np.pi)
     for n in range(num_sinusoids):
         alpha_n = (2 * np.pi * n - np.pi + theta) / (4 * num_sinusoids)
-        phi_n = np.random.uniform(0, 2 * np.pi)
-        phi_n2 = np.random.uniform(0, 2 * np.pi)
+        phi_n = rng.uniform(0, 2 * np.pi)
+        phi_n2 = rng.uniform(0, 2 * np.pi)
         
         x += np.cos(2 * np.pi * fd_hz * t * np.cos(alpha_n) + phi_n)
         y += np.cos(2 * np.pi * fd_hz * t * np.sin(alpha_n) + phi_n2)
@@ -77,14 +88,19 @@ def generate_rician_fading(
     fd_hz: float,
     fs: float,
     num_sinusoids: int = 20,
-) -> np.ndarray:
+    rng: np.random.Generator =None,
+):
     """
     生成莱斯衰落
     K = 直射径功率 / 散射径功率
     K=0时退化为瑞利，K→∞时为AWGN
+    rng: 随机数生成器，传入固定种子的生成器可保证结果可复现
     """
+    if rng is None:
+        rng=np.random.default_rng()
+
     # 散射分量 (瑞利)
-    h_scatter = generate_rayleigh_fading(num_samples, fd_hz, fs, num_sinusoids)
+    h_scatter = generate_rayleigh_fading(num_samples, fd_hz, fs, num_sinusoids,rng=rng)
     h_scatter = h_scatter / np.sqrt(np.mean(np.abs(h_scatter)**2))  # 归一化散射功率为1
     
     # 直射分量 (有相位变化，考虑多普勒)
@@ -109,13 +125,18 @@ def generate_multipath_components(
     fd_hz: float,
     fs: float,
     k_factor_linear: float = 10.0,
-) -> tuple:
+    rng: np.random.Generator =None,
+):
     """
     生成多径分量（抽头延迟线模型）
     返回: h_taps (num_paths x num_samples), tap_delays_s, tap_powers_db
+    rng: 随机数生成器，传入固定种子的生成器可保证结果可复现
     """
+    if rng is None:
+        rng=np.random.default_rng()
+
     # 指数功率延迟分布
-    tap_delays_s = np.sort(np.random.exponential(tau_rms_s, num_paths))
+    tap_delays_s = np.sort(rng.exponential(tau_rms_s, num_paths))
     tap_delays_s = tap_delays_s - tap_delays_s[0]  # 第一个径在0时延处
     
     # 功率按指数衰减
@@ -130,12 +151,12 @@ def generate_multipath_components(
         if i == 0:
             # 直射径：莱斯K因子
             h_taps[i, :] = np.sqrt(tap_powers_linear[i]) * generate_rician_fading(
-                num_samples, k_factor_linear, fd_hz * 0.8, fs  # 直射径多普勒略小
+                num_samples, k_factor_linear, fd_hz * 0.8, fs,rng=rng  # 直射径多普勒略小
             )
         else:
             # 反射径：瑞利
             h_taps[i, :] = np.sqrt(tap_powers_linear[i]) * generate_rayleigh_fading(
-                num_samples, fd_hz * np.random.uniform(0.5, 1.0), fs
+                num_samples, fd_hz * rng.uniform(0.5, 1.0), fs, rng=rng
             )
     
     return h_taps, tap_delays_s, tap_powers_db

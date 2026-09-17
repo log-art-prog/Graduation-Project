@@ -49,10 +49,17 @@ def simulate_channel(
     rx_gain_db: float = 30.0,
     noise_figure_db: float = 3.0,
     rain_rate_mm_h: float = 2.0,
+    seed: Optional[int] = None,
+    rng: Optional[np.random.Generator] = None,
 ) -> ChannelResult:
     """
     对给定环境和轨道参数进行完整信道仿真
+    seed: 随机种子（单独调用时使用）
+    rng: 随机数生成器（多环境仿真时由上层统一分发，优先级高于 seed）
     """
+    if rng is None:
+        rng = np.random.default_rng(seed)
+
     num_points = len(orbit.t)
     c = 299792458
     wavelength = c / fc_hz
@@ -101,7 +108,8 @@ def simulate_channel(
         num_samples=num_points,
         sigma_db=env.sigma_shadow_dB,
         velocity_ms=mean_sat_velocity,
-        fs=num_points / (orbit.t[-1] - orbit.t[0])
+        fs=num_points / (orbit.t[-1] - orbit.t[0]),
+        rng=rng
     )
     
     # 总路径损耗加阴影
@@ -130,7 +138,8 @@ def simulate_channel(
         num_samples=num_points,
         k_factor_linear=avg_k,
         fd_hz=avg_doppler,
-        fs=num_points / (orbit.t[-1] - orbit.t[0])
+        fs=num_points / (orbit.t[-1] - orbit.t[0]),
+        rng=rng
     )
     small_scale_amp = np.abs(small_scale)
     
@@ -160,15 +169,22 @@ def simulate_channel(
 def simulate_multiple_environments(
     environments: List[EnvironmentParams],
     orbit: OrbitParams,
+    seed: Optional[int] = None,
     **kwargs
 ) -> List[ChannelResult]:
     """
     对多个环境进行对比仿真
+    seed: 父随机种子，内部通过 spawn 为每个环境分裂出相互独立但确定的子随机流，
+          保证：① 同种子可复现；② 各环境随机实现互不雷同；
+          ③ 单独跑某环境（单元素列表）与跑全部时该环境的结果一致
     """
+    parent_rng = np.random.default_rng(seed)
+    child_rngs = parent_rng.spawn(len(environments))
+
     results = []
-    for env in environments:
+    for env, env_rng in zip(environments, child_rngs):
         print(f"🔄 正在仿真环境: {env.name_cn}...")
-        result = simulate_channel(env, orbit, **kwargs)
+        result = simulate_channel(env, orbit, rng=env_rng, **kwargs)
         results.append(result)
         print(f"   ✅ 完成！衰落深度: {result.fade_depth_db:.1f} dB")
     return results
