@@ -1,0 +1,24 @@
+基线版本（改前）仿真结果记录
+运行时间：2026-09-17
+模型：原始 ITU-R 经验模型，未固定随机种子
+============================================================
+
+轨道信息：
+  最大仰角:          89.8°
+  最大多普勒频移:    ±492.9 kHz
+  多普勒变化率峰值:  ~7006 Hz/s
+  斜距范围:          550 ~ 2345 km
+
+各环境结果（本次随机实现）：
+  Environment   Shadowσ   Min PL   Max PL   FadeDepth   K Range       τ_rms Range
+  Open Area       1.0 dB   172.1    190.6    -0.8 dB    12.3~25.0 dB  2.4~7.1 ns
+  Suburban        3.5 dB   166.4    198.4    -2.9 dB     4.8~15.0 dB  14.5~67.3 ns
+  Urban           6.0 dB   156.9    205.4   -16.8 dB    -7.7~5.0 dB   97.7~654.5 ns
+
+注意：FadeDepth（衰落深度）每次运行都会变化（前一次记录为
+      Open -0.9 / Suburban -3.1 / Urban -12.6 dB），
+      这正是 #9 随机种子未统一、结果不可复现的直接证据。
+
+备份图片：
+  baseline_suburban_detail.png       城郊环境详细分析（改前）
+  baseline_environment_comparison.png 三环境对比（改前）
