@@ -1,0 +1,516 @@
+738 
+A Statistical 
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY. VOL. 43, NO. 3. AUGUST 1994 
+Model for Land Mobile Satellite 
+Channels and Its Application to Nongeostationary 
+Orbit S y s terns 
+Giovanni E. Corazza, Member, IEEE, and Francesco Vatalaro, Senior Member, IEEE 
+Abstract-The paper introduces a statistical channel model 
+which is a combination of Rice and lognormal statistics, and is 
+suitable in principle to all types of environment (rural, subur- 
+ban, urban) simply by tuning the model parameters. The model 
+validity is confirmed by comparisons with measurement data 
+collected in the literature. Empirical formulas are derived for 
+the model parameters to fit measured data over a wide range 
+of elevation angles. In particular, the model is applied to non- 
+geostationary satellite channels, such as low-Earth orbit and 
+medium-Earth orbit channels, in which for a given user located 
+in a generic site the elevation angle changes continuously. Fi- 
+nally, examples of average bit error probability evaluations in 
+the channel are provided. 
+I. INTRODUCTION 
+S a consequence of the growing interest in land mo- 
+A bile satellite (LMS) systems, much effort is being de- 
+voted to the problem of modeling nonselective multipath 
+fading and shadowing in the LMS communication chan- 
+nel. Among the different viable approaches [l], a proba- 
+bility distribution model, which is less complicated than 
+a geometric analytic model and is more phenomenological 
+than an empirical regression model, has the advantage to 
+more easily allow performance predictions and system 
+comparisons under different conditions of modulation, 
+coding, and multiple access. Loo [2] proposed a model, 
+suitable for rural environments, which assumes that the 
+received signal is affected by nonselective Rice fading 
+with lognormal shadowing on the direct component only, 
+while the diffuse scattered component has constant aver- 
+age power level. Lutz et al. [3] introduced a two-state 
+model which is Rice under good propagation conditions 
+and Rayleigh-lognormal otherwise. 
+In this paper we propose a probability distribution 
+model which is a combination of Rice and lognormal sta- 
+tistics, with shadowing affecting both direct and diffise 
+components, and not only the former as in [2]. In prin- 
+ciple, our model is suitable to all types of environment 
+(rural, suburban, urban) simply by tuning the model pa- 
+Manuscript received September 31, 1993; revised March 20, 1994. This 
+work was carried out within the framework of the “Progetto Finalizzato 
+Telecomunicazioni” of the Italian CNR. 
+The authors are with the Universitk di Roma “Tor Vergata,” Diparti- 
+mento di Ingegneria Elettronica, Via della Ricerca Scientifica, 00133 Roma, 
+Italy. 
+IEEE Log Number 9403213. 
+rameters. In particular, in built-up areas it reduces to the 
+well-known and well-tested Suzuki model (i.e., Rayleigh- 
+lognormal) [4], that is widely accepted for terrestrial land 
+mobile macrocellular channels [5]. In this paper the model 
+is applied to nongeostationary satellite channels, such as 
+low-Earth orbit (LEO) and medium-Earth orbit (MEO) 
+channels. 
+LEO and ME0 constellations are being considered in 
+many proposals for future LMS systems [6], with the ob- 
+jective to achieve a global coverage with acceptable ele- 
+vation angle, CY. 
+Being such orbits nongeostationary , the 
+elevation angle at any site changes continuously over time; 
+as a consequence, the propagation conditions are also time 
+varying, even if the mobile terminal is static as it is often 
+the case in personal communications. 
+In order to be able to predict the performance of a sys- 
+tem adopting such constellations, it is therefore necessary 
+to possess a statistical model which fits measured data over 
+a wide range of elevation angles. Here we adopt a novel 
+approach, in which the parameters of the probability dis- 
+tribution model are described by empirical formulas to fit 
+measured data. The resulting hybrid empirical-probabil- 
+ity distribution model fits measured data over a wide range 
+of CY, and it allows the evaluation of performance char- 
+acteristics such as the average bit error probability. 
+The paper is organized as follows. In Section I1 we 
+present the statistical channel model, its validation against 
+measured data and the empirical regression formulas for 
+a rural tree-shadowed environment. In Section I11 we de- 
+scribe a three step procedure to evaluate the probability 
+of error for nongeostationary systems. In Section IV we 
+discuss some important features of the nongeostationary 
+(in particular LEO and MEO) satellite channels and then 
+provide examples of bit error probability evaluations. In 
+Section V we draw paper conclusions. 
+11. STATISTICAL 
+CHANNEL 
+MODELING 
+AND VALIDATION 
+A. Probability Distribution Model 
+The probability density function (p.d.f.) of received 
+signal envelope, r, is given by 
+m 
+P
+m
+ = so P(rl S)Ps(S) dS. 
+(1) 
+In (1) p(rlS) is a Rice p.d.f. conditioned on a certain 
+0018-9545/94$04.00 0 1994 IEEE 
+
+CORAZZA AND VATALARO: MODEL FOR LAND MOBILE SATELLITE CHANNELS 
+739 
+shadowing, S: 
+1 
+[ 
+S 
+r2 
+p(rlS) = 2 ( K +  1 ) G e x p  -(K + 1 ) i  - K 
+S 
+- z0 2 IS JKO (r 2 01 
+(2) 
+where Zo is the zero order modified Bessel function of the 
+2 20 - 
+2 
+B 
+( 
+) 
+first kind, and K is the so called Rice factor. The shad- 
+.e 
+25 - 
+owing, S, is lognormal with p.d.f.: 
+30 
+( 3 )  
+where h = (In 10)/20, p and (ha)2 are the mean and the 
+variance of the associated normal variate, respectively; in 
+terrestrial channels u is usually referred to as the "dB 
+spread. " 
+When K = 0, (1)-(3) provide the Suzuki p.d.f. In the 
+limit for u -+ 0, ps(S) tends to a Dirac pulse located at 
+the mean value of the distribution, i.e., it tends to 
+6(S - e"). Therefore p,(r) -, p (rle@) and the channel is 
+Rice. 
+The signal envelope which meets the channel model 
+(1)-(3) can be interpreted as the product of two indepen- 
+dent processes, Le., r = RS, where R is a Rice process, 
+and S is lognormal. Due to the independence between R 
+and S we have [7]: 
+and by comparing (1) and (4): 
+which implies 0; 
+= 1/2(K + 1j. Equation (4) allows fur- 
+ther observations: when K + 03, pR(R) tends to a Dirac 
+pulse located at R = 1 andp,(r) tends tops(r), i.e., the 
+channel is lognormal. When K -+ 
+03 and u -+ 0 fading is 
+absent. Therefore, depending on the combination of K, p, 
+u the proposed channel model can be reduced to any one 
+of the usual nonselective fading models. 
+From the moments of the lognormal process [8] and 
+those of the Rice process [9], the nth order moment of r 
+can be derived as 
+E(r"} = E{R"}E{S"} = (K + l)-'1'2cKr 
+1 + - 
+( 9 
+e"@ exp (in'h'o') 
+. IF1 ( 1  + i, 1 ;  K )  
+-35 
+001 
+01 
+05 1 
+2 
+5 
+10 
+20 30105060 70 80 
+BO 95 BB 09 995 
+W.0 
+W W  
+Percent of time received signal is above ordinate 
+Fig. 1 .  Comparison between measured c.d.f. data in light shadowing ( 0 )  
+and heavy shadowing ( x), the c.d.f. given by (7) (continuous lines), and 
+the c.d.f. provided in [2] (dashed lines). Light shadowing: K = 4.0, p = 
+0.13, u = 1.0. Heavy shadowing: K =  0.6, p = -1.08, u = 2.5. 
+where r is the gamma function and IF, is the confluent 
+hypergeometric function [ 101. 
+Finally, the cumulative distribution function (c.d.f.) of 
+the envelope is 
+Pr(ro) 2 Prob { r < ro} 
+= 1 - E s [ Q ( & , : m  
+)I 
+(7) 
+where Es { } stands for the average with respect to S and 
+Q is the Marcum's Q-function [9]. 
+B. Model Validation and Empirical Formulas 
+The proposed channel model was validated with respect 
+to measurement data available in the literature. Fig. 1 col- 
+lects the c.d.f. measured data provided in [2] for the cases 
+referred to as "infrequent light shadowing" and "fre- 
+quent heavy shadowing." In the same Fig. 1 we provide 
+the fitting curves obtained by means of (7) with parame- 
+ters p, u, K optimized by trial and error, and for compar- 
+ison the curves calculated with the c.d.f. in [2]. Curves 
+calculated with our model match very well both with mea- 
+surement data and with Loo's c.d.f. 
+As stated in the "Introduction, " empirical formulas 
+should be derived to fit measured data over a wide range 
+of elevation angles. As an example, we used some data 
+collected by ESA at L-band in a rural tree-shadowed en- 
+vironment [I 11. Data fitting was conditioned on the fol- 
+lowing intuitive indications: the greater is a, the larger is 
+K and the smaller is u. The resulting empirical formulas 
+allow interpolation for any cy in the range 20" < cy < 
+80" : 
+K ( a )  = KO + Klcy + K2cy2 
+P ( a >  = Po + PIQ + P2cy2 + P P 3  
+u(a) = uo + u1cy. 
+(81 
+
+740 
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY. VOL. 43. NO. 3. AUGUST 1994 
+& = 2.731 
+4 
+= -1.074 10’ 
+4 
+= 2.774 10-9 
+TABLE I 
+ENVIRONMENT) 
+COEFFICIENTS FOR EMPIRICAL 
+FORMULAS 
+(RURAL 
+TREE-SHADOWED 
+pa = -2.331 
+a0 = 4.5 
+= 1.142 10-1 
+a1 = ~ 0.05 
+pz = - 1.939 10-9 
+= 1.094106 
+I 
+I 
+I 
+I 
+I 
+1 
+20 
+30 
+40 
+50 
+60 
+70 
+80 
+a 
+Fig. 2. Model parameters, p, u, and K as a function of the elevation angle, 
+a, in a mal tree-shadowed environment. 
+I
+1
+ I
+l
+l
+ 
+I 
+10 
+6Q 
+70 
+80 
+90 
+95 
+98 
+99 
+99.5 
+99.9 
+99.99 
+Pacent of h
+e
+ 
+received signal level is above ordinate 
+Fig. 3. Comparison between measured c.d.f. data in a rural tree-shadowed 
+environment ( 0 )  as a function of the elevation angle, a, and the proposed 
+c.d.f. with parameters given by (8) (continuous lines). 
+The coefficients for the specific example are reported in 
+Table I and the resulting curves for K, 
+p and (T are shown 
+in Fig. 2, while measured data fitting is reported in Fig. 
+2 
+J. 
+111. PROBABILITY 
+OF ERROR 
+IN THE NONGEOSTATIONARY 
+LMS CHANNEL 
+The symbol error probability for transmission in chan- 
+nels affected by time and frequency nonselective fading 
+can be written as 
+P” 
+pe = Io P(eIr)pr(r) dr 
+(9) 
+where P (e I r) is the symbol error probability conditioned 
+on a certain value of r and pr (r) is given by (4). By sub- 
+stituting (4) into (9) and interchanging the order of inte- 
+gration we have 
+pe = lo” 
+~S(S) [ j” p(elR~)pR(R) 
+dR d~ 
+(10) 
+0 
+I 
+where R = r/S. The inner integral represents the average 
+error probability in the presence of Rice fading only (Le., 
+for a given value of S): 
+cn 
+ER{P(elRS)} = so P(e(RS)pR(R) dR 
+(11) 
+while the outer integral in (10) is the average off@) in 
+the presence of lognormal shadowing. In conclusion, we 
+have: 
+(12) 
+pe = ES{f(S)) = ES{ER[P(elr)l). 
+The error probability provided by (12) depends on the 
+model parameters p ,  (T and K, which for a given site are 
+functions of the elevation angle, a. 
+While for geostationary systems (12) itself provides the 
+local average probability of error, in the case of nongeo- 
+stationary orbit systems P, must be additionally averaged 
+with respect to the angle p.d.f.: 
+I“, = Ea{Pe). 
+(13) 
+The three step procedure given by (1 1)-( 13) for evaluat- 
+ing the error probability is applied in the following section 
+to some specific examples. 
+IV. NUMERICAL 
+RESULTS FOR SOME 
+NONGEOSTATIONARY 
+ORBIT SYSTEMS 
+With the aim of characterizing nongeostationary orbit 
+systems, a software package was developed. The package 
+simulates the satellite constellation motion around the 
+Earth, and evaluates system parameters and functions such 
+as instantaneous coverage, satellite handovers, link un- 
+availabilty, etc. [12]. In particular, the c.d.f. of the ele- 
+vation angle can be achieved under minimum, average, 
+and maximum global coverage conditions. As an exam- 
+ple, Fig. 4 shows the minimum worldwide coverage, 
+C,,, 
+(%), as a function of a for some LEO and ME0 con- 
+stellations [6]. We note that the fractional area covered 
+with high-elevation angles, e.g., a 2 60°, is generally 
+small. This means that to achieve adequate protection 
+from shadowing nongeostationary communication sys- 
+tems must be provided with large power margins. From a 
+channel modeling point of view, we must resort to local 
+statistics for the elevation angle. For instance, setting 
+Roma as the location in which the performance needs to 
+be evaluated, the corresponding discretized p.d.f. for a is 
+reported in Table I1 for the different constellations con- 
+sidered. 
+Making use of the proposed model, the bit error prob- 
+ability for binary DPSK modulation has been evaluated at 
+different elevation angles (see Fig. 5). For high elevation 
+angles (greater than 60°), when shadowing is negligible, 
+it is evident an error floor in the bit error probability curves 
+
+CORAZZA AND VATALARO: MODEL FOR LAND MOBILE SATELLITE CHANNELS 
+74 1 
+,.. 
+E 
+UE 
+e, 60 
+8 
+.5 
+2 
+$ 
+40 
+20 
+0 
+0 
+10 
+20 
+30 
+40 
+50 
+60 
+70 
+80 
+90 
+a (&flees) 
+Fig. 4. Minimum global coverage (polar regions excluded) of some LEO 
+and ME0 systems as a function of the elevation angle, a (the number fol- 
+lowing the system name provides the constellation size). 
+TABLE I1 
+% (SITE: ROMA; 41.9 N LAT., 12.5 E LONG) 
+DISCRETIZED 
+PROBABILITY DENSITY 
+FUNCTION 
+FOR THE ELEVATION 
+ANGLE, 
+100 
+~ 
+I 
+I 
+I 
+I 
+I 
+1 
+1 
+0 
+5 
+I O  
+15 
+20 
+25 
+30 
+35 
+Eb/No (dB) 
+Fig. 5. Bit error probability, P,, for DPSK modulation as a function of the 
+bit energyhoise power spectral density, E,,/N,, for several values of the 
+elevation angle, a. 
+due to the presence of the diffuse component. Averaging 
+the bit error probability over the discretized range of el- 
+evation angles produces the average bit error probability 
+for the different constellations as reported in Fig. 6 .  Ob- 
+viously, these results cannot be used to compare the ac- 
+tual systems for several reasons, among which: DPSK is 
+not the adopted modulation scheme; the systems have dif- 
+ferent orbital heights, so that free-space losses are much 
+different; shadowing and multipath fading are not the only 
+impairments in the channel (in particular, co-channel in- 
+terference has to be considered). Furthermore, the results 
+strongly depend on latitude. 
+The presented approach to the estimation of the average 
+bit error probability provides a tool that enhances the link 
+0 
+5 
+IO 
+15 
+20 
+25 
+30 
+35 
+Eb/No (dB) 
+Fig. 6. Average bit error probability, Fc, for DPSK modulation as a func- 
+tion of the bit energy/noise power spectral density, E,,/N,, associated to the 
+probability density functions for the elevation angle given in Table 11 (site: 
+Roma) . 
+budget accuracy of any system adopting nongeostationary 
+orbits. 
+V. CONCLUSIONS 
+The paper described a statistical model for land mobile 
+satellite communications that is suitable to different prop- 
+agation environments and a wide range of elevation an- 
+gles. Therefore, the model is proposed for the statistical 
+characterization of LEO and ME0 satellite communica- 
+tions. The model allows to predict communication per- 
+formance under different conditions of modulation, cod- 
+ing, and multiple access. The paper showed this by 
+evaluating the average probability of error in few simple 
+cases. 
+REFERENCES 
+J. Goldhirsh and W. I. Vogel, “Propagation effects for land mobile 
+satellite systems: Overview of experimental and modeling re- 
+sults,”NASA Ref. Publ. 1274, 1992. 
+C. Loo, “A statistical model for land mobile satellite link,” IEEE 
+Trans. Veh. Technol., vol. VT-34, pp. 122-127, Aug. 1985. 
+E. Lutz, D. Cygan, M. Dippold, F. Dolainsky, and W. Papke, “The 
+land mobile satellite communication channel-recording, statistics and 
+channel model,” IEEE Trans. Veh. Technol., vol. 40, pp. 375-385, 
+May 1991. 
+H. Suzuki, “A statistical model for urban radio propagation,” ZEEE 
+Trans. Commun., vol. COM-25, pp. 673-680, July 1977. 
+D. Parsons, The Mobile Radio Propagation Channel. London: Pen- 
+tech Press, 1992. 
+MITRE, “Study of the mobile satellite communication industry: In- 
+terim report,” ESA Contract 9563/91/NL/RE, Nov. 1991. 
+A. Papoulis, Probabilities, Random Variables and Stochastic Pro- 
+cesses. 
+New York: McGraw Hill, 1991, 3rd ed. 
+L. F. Fenton, “The sum of log-normal probability distributions in 
+scatter transmission systems,” IRE Trans. Comm. Sysr., pp. 57-67, 
+Mar. 1960. 
+1. G. Proakis, Digital Communications. 
+New York: McGraw Hill, 
+1983. 
+M. Abramowitz and 1. A. Stegun, Handbook of Mathematical Func- 
+tions. 
+New York: Dover, 1970. 
+M. Sforza and S. Buonomo, “Characterisation of the propagation 
+channel for nongeostationary LMS systems at L- and S-bands: Nar- 
+row band experimental data and channel modelling,” in Proc. XVII 
+NAPEX Conf.. Pasadena, CA, June 14-15, 1993. 
+G. E. Corazza and F. Vatalaro, “Comparison of low and medium 
+orbit systems for future satellite personal communications,” pre- 
+sented at IEEE Pacijic Rim Con5 Comm., Compur. Signal Proc., 
+IEEE 93CH32-88, May 19-21, 1993, pp. 678-681. 
+
+142 
+IEEE TRANSACTIONS ON VEHICULAR TECHNOLOGY, VOL. 43, NO. 3, AUGUST 1994 
+Giovanni E. Corazza (M’92) was born in Tri- 
+este, Italy, in 1964. He received the Dr.Ing. de- 
+gree in electronic engineering in 1988 from the 
+University of Bologna, Bologna, Italy. 
+From 1989 to 1990 he was with the Canadian 
+aerospace company COM DEV (Cambridge, Ont., 
+Canada), where he was an advanced member of 
+technical staff, working in the millimeter-wave 
+subsystems group. 
+Since 1991 he has been with the Dipartimento 
+di Elettronica of the Universiti di Roma “Tor 
+Vergata,” where he is presently a research associate. His main interests 
+are in the areas of terrestrial and satellite personal communication systems, 
+and spread spectrum multiple access techniques. 
+Francesco Vatalaro (M’88-SM’91) was born in 
+Vibo Valentia, Italy, in 1953. He received the 
+Dr.Ing. degree in electronic engineering from the 
+University of Bologna, Bologna, Italy, in 1977. 
+From 1977 to 1980 he was with Fondazione Ugo 
+Bordoni at Pontecchio Marconi, Italy. Then he 
+was with FACE Standard Central Laboratory, Po- 
+mezia, Italy, from 1980 to 1985. While with Se- 
+lenia Spazio, Roma, Italy, he was Group Leader 
+of satellite ground segment radiosystems engi- 
+neering. In 1987. he became Associate Professor 
+Y 
+of Radio Systems at the University of Roma Tor Vergata. From 1987 to 
+1989 he was Project Manager of the ground segment of the European Data 
+Relay System (ESA-DRS). He was co-winner of the 1990 “Piero Fanti” 
+INTELSAT/Telespazio international prize. His research interests include 
+mobile and personal communication systems and spread spectrum systems. 
+Prof. Vatalaro is a member of AEI. 

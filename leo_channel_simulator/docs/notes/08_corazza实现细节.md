@@ -1,7 +1,8 @@
 # 08 Corazza 参考模型实现细节
 
-> 阶段0 前置笔记 P.2　整理日期：2026-09-18
+> 阶段0 前置笔记 P.2　整理日期：2026-09-18　**单位裁决与 K0 勘误更新：2026-09-19**
 > 来源：陈万埼学长论文 2.4.5 节（式2-20~2-26）、3.2.1 节（表3-1、式3-3~3-8）
+> 一手依据：Corazza & Vatalaro 1994 原文（本地 `docs/references/corazza1994_land_mobile_satellite_channels.pdf/.txt`）
 > 用途：阶段1 Day 1/Day 2 写代码前的"公式说明书"，也是毕设论文理论基础章的草稿素材。
 
 ---
@@ -50,25 +51,52 @@ p_R(r) = ───── · exp ⎢− ─────────── ⎥ · 
 - K → 0：没有直射径，R 退化为瑞利分布（城市深遮挡）；
 - K → ∞：几乎只有直射径，R 趋近常数（晴天高仰角）。
 
-**采样方法（Day 2 代码）**：
-1. x, y 为两个独立 N(0, σ₀²) 高斯数（先取 σ₀=1 归一化）；
-2. 直射分量加在实轴：m = σ₀·√(2K)；
-3. R = √((x+m)² + y²)。
+**采样方法（Day 2 代码，按 C&V 1994 式(5) 的归一化约定）**：
+
+原文把 Rice 分量归一化到 **E[R²] = 1**（总功率为 1，阴影 S 承担全部增益变化），由原文式(5) 可得：
+
+```
+σ_R² = 1 / [2(K+1)]      （每个正交散射分量的方差）
+m    = √( K / (K+1) )    （直射径幅度，m²/(2σ_R²) = K 可自行验证）
+```
+
+1. z1, z2 为两个独立 N(0, 1)；
+2. R = √((m + σ_R·z1)² + (σ_R·z2)²)；
+3. 检验：E[R²] = m² + 2σ_R² = K/(K+1) + 1/(K+1) = 1 ✓
+
+（注意：不要用"σ₀=1 且 m=√(2K)"的非归一化写法，那样 E[R²]=K+1，会和原文式(7) 的理论 CDF 对不上。）
 
 ---
 
-## 4. Lognormal 分量 S 的数学定义
+## 4. Lognormal 分量 S 的数学定义（单位已定案，见第 6 节）
+
+原文 1994 式(3) 的精确形式：
 
 ```
-                    1            ⎡  (ln S − μ)² ⎤
-p_S(S) = ──────────────── · exp ⎢− ─────────── ⎥ ,  S ≥ 0
-          S·σ·√(2π)             ⎣      2σ²     ⎦
+                    1             ⎡  (ln S − μ)²  ⎤
+p_S(S) = ───────────────── · exp ⎢− ──────────── ⎥ ,  S ≥ 0
+          √(2π)·h·σ·S            ⎣   2(hσ)²      ⎦
+
+其中  h = ln(10)/20 ≈ 0.11513
 ```
 
-（论文式 2-21）
+- **μ：奈培(Np)**，是 ln S 的均值；
+- **σ：dB**，是 20log₁₀(S) 的标准差，原文原话称其为 "dB spread"；
+- ln S 的标准差是 h·σ（奈培），不是 σ 本身——学长式(2-21) 漏写了 h。
 
-- μ、σ 是 **ln S 的均值和标准差**（若参数表给的是 dB 域，则换算关系见第 6 节）；
-- 采样：z ~ N(0,1)，S = exp(μ + σ·z)。
+**采样（两种等价写法，Day 2 用第一种）**：
+
+```
+z ~ N(0,1)
+S = exp( μ + h·σ·z )                  # ln 域直接写
+
+# 等价的全 dB 写法：
+X_dB = 8.686·μ + σ·z                  # 20log10(S) ~ N(8.686μ, σ²)
+S    = 10**( X_dB / 20 )              # S 是电压/包络，用 20log 不是 10log
+```
+
+数值量级（农村树阴影）：α=20° 时 μ=−0.735 Np（中位阴影 −6.38 dB）、σ=3.5 dB；
+α=80° 时 μ≈0、σ=0.5 dB（近无阴影）。反证：若把 σ 当奈培，会推出 E[S]≈220 的荒谬值。
 
 ---
 
@@ -94,56 +122,64 @@ F_r(r) = ∫₀^∞  [ 1 − Q₁( √(2K), (r/S)·√(2(K+1)) ) ] · p_S(S) dS
 
 ---
 
-## 6. 仰角参数化（表 3-1）与单位疑点 ⚠️
+## 6. 仰角参数化（原文 Table I）：单位裁决与 K0 勘误 ✅
 
-### 6.1 三个多项式（论文式 3-3 ~ 3-5，α 单位为度，适用 20°~80°）
+### 6.1 三个多项式（原文式(8)，α 单位为度，适用 20°~80°）
 
 ```
 K(α) = K0 + K1·α + K2·α²
-       K0 = 2.371,  K1 = −1.074×10⁻¹,  K2 = 2.774×10⁻³
+       K0 = 2.731,  K1 = −1.074×10⁻¹,  K2 = 2.774×10⁻³      # K 线性
 
 μ(α) = μ0 + μ1·α + μ2·α² + μ3·α³
-       μ0 = −2.331, μ1 = 1.142×10⁻¹,  μ2 = −1.939×10⁻³,  μ3 = 1.094×10⁻⁵
+       μ0 = −2.331, μ1 = 1.142×10⁻¹,  μ2 = −1.939×10⁻³,  μ3 = 1.094×10⁻⁵   # μ 单位 Np
 
 σ(α) = σ0 + σ1·α
-       σ0 = 4.5,    σ1 = −0.05
+       σ0 = 4.5,    σ1 = −0.05                                # σ 单位 dB
 ```
 
-（农村环境，L 频段；城市/郊区另有系数，本课题只用农村）
+（农村树阴影环境，ESA L 频段测量拟合；城市/郊区另有系数，本课题只用农村）
 
-### 6.2 代入几个仰角看看量级
+### 6.2 代入几个仰角（2026-09-19 按 K0=2.731 重跑确认）
 
-| α | K(α) | μ(α) | σ(α) |
-|---|------|------|------|
-| 20° | 1.333 | −0.735 | 3.500 |
-| 35° | 2.010 | −0.240 | 2.750 |
-| 50° | 3.936 | −0.101 | 2.000 |
-| 65° | 7.110 | −0.096 | 1.250 |
-| 80° | 11.533 | −0.003 | 0.500 |
-
-（2026-09-18 由 `scripts/day1_plot_params.py` 实跑确认，修正了此前手算的 μ 值）
+| α | K(α) 线性 | μ(α) Np | σ(α) dB | 8.686μ (dB) |
+|---|------|------|------|------|
+| 20° | **1.693** | −0.735 | 3.500 | −6.38 |
+| 35° | **2.370** | −0.240 | 2.750 | −2.08 |
+| 50° | **4.296** | −0.101 | 2.000 | −0.88 |
+| 65° | **7.470** | −0.096 | 1.250 | −0.83 |
+| 80° | **11.893** | −0.003 | 0.500 | −0.02 |
 
 物理趋势全部正确：仰角越高 → K 越大（直射越强）、σ 越小（阴影越稳定）。
 
-### 6.3 ⚠️ 单位疑点（Day 1 必须核对，禁止凭感觉写死）
+### 6.3 ✅ 单位裁决（2026-09-19，证据链闭合，G1 关卡关闭）
 
-论文正文没有明确说 K、μ、σ 的单位。把上表与 Corazza & Vatalaro (1994) 农村参数的公认转述对照：
+**结论：K 线性、μ 奈培(Np)、σ dB——原文刻意混用，靠 h=ln10/20 桥接。**
 
-- K 从 1.33 到 11.5，**恰好在典型 LMS 信道 Rice 因子的 dB 范围（约 1~14 dB）**；若按线性值，K=1.33 意味着直射只比散射强 1.2 dB，20° 农村仰角偏低得不合理；
-- σ 从 3.5 到 0.5，**正是常见转述中"阴影标准差 dB"的数值区间**；若按 ln（奈培）理解，3.5 奈培 ≈ 15 dB，农村低仰角偏大；
-- μ 在 −0.74~0.22，理解成 dB 时阴影均值几乎不偏（合理），理解成奈培则偏 −6.4~1.9 dB。
+证据：
+1. **一手证据**：Corazza & Vatalaro 1994 原文式(3)（本地 `docs/references/corazza1994_land_mobile_satellite_channels.pdf` 第2页），
+   原句："h=(ln10)/20, **μ and (hσ)² are the mean and the variance of the associated
+   normal variate**; σ is usually referred to as the **'dB spread'**"。
+2. **独立旁证**：Fontan et al. 2008（ESA/DLR，本地 `docs/references/fontan2008_review_lms_propagation.pdf`）Table IV
+   直接列原 C&V 参数表头为 **m (Np)、s (dB)、k (linear)**（轻阴影 0.13/1.0/4.0，
+   重阴影 −1.08/2.5/0.6，与原文 Fig.1 完全一致），并给换算 M_dB=8.686m、Σ_dB=s。
+3. **学长论文的两处不严谨**：表 3-1 未标单位；式(2-21) 漏 h；图 3-1 纵轴把 μ 也标成
+   (dB) 属标注错误（图上画的 −0.735 等是奈培原值）。
+4. 早先"三个量都是 dB"和"μ、σ 都是奈培"两种猜测均被原文否定。
 
-**初步判断：三个量都是 dB 域参数**（多数二手实现即按此），此时采样换算：
+**Day 2 不再做双路径 KS 单位试错**（单位已由一手法条定案）；KS 实验仍保留，但只验证
+采样器实现：i.i.d. 大样本经验 CDF vs 原文式(7)（Marcum Q 积分）理论 CDF，4 个仰角 KS<0.01。
 
-```
-K_lin = 10**(K_dB/10)
-S = 10**( (μ_dB + σ_dB·z)/10 )          # 即阴影幅度
-（若最终确认原文用 ln，则 S = exp(μ + σ·z)）
-```
+### 6.4 ⚠️ K0 勘误：学长表 3-1 的 2.371 是笔误，原文为 2.731
 
-**Day 1 核对动作**：① 画出三参数随仰角曲线，与论文图 3-1 目视比对；② 查 Corazza & Vatalaro 1994 原文（IEEE Trans. Vehicular Technology, 43(2)）参数表确认单位；③ 结论写回本笔记，代码系数旁注明出处。在确认前，`corazza.py` 里同时保留 dB/ln 两种采样开关。
+- 原文 Table I 放大核实：**K0 = 2.731**（本地 PDF 第3页）。
+- 学长表 3-1 印作 2.371（3、7 颠倒的抄录错误）；但对其**图 3-1 蓝色曲线做像素提取**，
+  5 个仰角读值 1.72/2.40/4.33/7.49/11.77 全部贴合 2.731 的理论值
+  1.69/2.37/4.30/7.47/11.89，而非 2.371 的 1.33/2.01/3.94/7.11/11.53
+  ——即他画图用的代码是对的，写表时手误，图表自相矛盾。
+- 本课题 `corazza.py` 以原文为准采用 **2.731**（2026-09-19 修正并重绘
+  `figs/p1_fig3-1_params.png`）。此勘误可写入毕设"参考模型严格复现"一节。
 
-### 6.4 不得外推
+### 6.5 不得外推
 
 多项式只是 20°~80° 的经验拟合，超出区间曲线会失真（如 σ 在 90° 变负），代码中加边界检查。
 
@@ -187,12 +223,13 @@ x = ( log(r + ε) − μ_log ) / σ_log
 
 | 公式/内容 | 计划函数（`generative/data/corazza.py`） |
 |---|---|
-| 表3-1、式3-3~3-5 | `corazza_params(alpha_deg) -> (K_dB, mu_dB, sigma_dB)` |
+| 原文 Table I、式(8) | `corazza_params(alpha_deg) -> (K_lin, mu_Np, sigma_dB)` |
+| 换算常数 | `H_DB_TO_NEPER = ln(10)/20`（已在 corazza.py 定义） |
 | 式3-7 | `normalize_alpha(alpha_deg)`（放在 `transforms.py`） |
-| 式2-20 Rice 采样 | `sample_rice_iid(n, K_lin, rng)` |
-| 式2-21 Lognormal 采样 | `sample_lognormal_iid(n, mu, sigma, rng, base)` |
-| 式2-23 复合 PDF | `corazza_pdf_theory(r, K_lin, mu, sigma, base)` |
-| 式2-26 复合 CDF | `corazza_cdf_theory(r, ...)`（Marcum Q，可用 `scipy.special` 组合或数值积分） |
+| 原文式(5) Rice 采样（E[R²]=1） | `sample_rice_iid(n, K_lin, rng)` |
+| 原文式(3) Lognormal 采样 | `sample_shadow_iid(n, mu_Np, sigma_dB, rng)`：S=exp(mu+H·sigma·z) |
+| 复合 PDF | `corazza_pdf_theory(r, K_lin, mu_Np, sigma_dB)`（对 S 数值积分） |
+| 原文式(7) 复合 CDF | `corazza_cdf_theory(r, ...)`（Marcum Q 对 p_S(S) 积分，`scipy.stats.ncx2`/`scipy.special`） |
 | 式3-8 | `fit_standardizer / standardize / inverse_standardize`（`transforms.py`） |
 | 时序序列（Day 3） | `colored_gaussian_jakes / colored_gaussian_lp / generate_corazza_sequence` |
 
@@ -200,7 +237,8 @@ x = ( log(r + ε) − μ_log ) / σ_log
 
 ## 10. 参考文献
 
-1. G. E. Corazza, F. Vatalaro, "A statistical model for land mobile satellite channels and its application to nongeostationary orbit systems," *IEEE Trans. Vehicular Technology*, 43(3), 1994.（**表3-1 原始出处，Day 1 核对**）
-2. 陈万埼，《基于CGAN的NGSO星座星地信道建模方法与仿真》，哈工大毕业论文，2026.05，2.4.5 节、3.2 节。
-3. W. C. Jakes, *Microwave Mobile Communications*, 1974/1994.（Day 3 多普勒谱理论）
-4. M. K. Simon, M.-S. Alouini, *Digital Communication over Fading Channels*.（Rice/LCR 闭式公式手册）
+1. G. E. Corazza, F. Vatalaro, "A statistical model for land mobile satellite channels and its application to nongeostationary orbit systems," *IEEE Trans. Vehicular Technology*, 43(3), pp.738–742, Aug. 1994. **DOI: 10.1109/25.312773**（模型与 Table I 系数一手出处；本地存 `docs/references/corazza1994_land_mobile_satellite_channels.pdf/.txt`）
+2. F. P. Fontan, A. Mayo, D. Marote, R. Prieto-Cerdeira, P. Mariño, F. Machado, N. Riera, "Review of generative models for the narrowband land mobile satellite propagation channel," *Int. J. Satell. Commun. Network.*, 26, pp.291–316, 2008. **DOI: 10.1002/sat.611**（Loo/C&V/Suzuki 三模型实现与单位换算权威综述；本地存 `docs/references/fontan2008_review_lms_propagation.pdf/.txt`，单位约定见其式(12)、式(37)、Table IV/V）
+3. 陈万埼，《基于CGAN的NGSO星座星地信道建模方法与仿真》，哈工大毕业论文，2026.05，2.4.5 节、3.2 节。（本地外目录有 PDF；表3-1 K0=2.371 系笔误，图3-1 实际对应 2.731）
+4. W. C. Jakes, *Microwave Mobile Communications*, 1974/1994.（Day 3 多普勒谱理论）
+5. M. K. Simon, M.-S. Alouini, *Digital Communication over Fading Channels*.（Rice/LCR 闭式公式手册）

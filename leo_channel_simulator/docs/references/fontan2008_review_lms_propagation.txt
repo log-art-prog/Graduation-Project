@@ -1,0 +1,1442 @@
+INTERNATIONAL JOURNAL OF SATELLITE COMMUNICATIONS
+Int. J. Commun. Syst. Network 2008; 26:291–316
+Published online in Wiley InterScience (www.interscience.wiley.com). DOI: 10.1002/sat.914
+Review of generative models for the narrowband land mobile
+satellite propagation channel
+F. P. Fontan1,,y, A. Mayo1, D. Marote1, R. Prieto-Cerdeira2, P. Marin˜ o1,
+F. Machado1 and N. Riera3
+1ETS Ing. de Telecomunicacio´n, Universidad de Vigo, Campus Universitario, E-36200 Vigo, Spain
+2European Space Agency, ESA-ESTEC, TEC-EEP, Keplerlaan 1, 2201 AZ Noordwijk, The Netherlands
+3German Aerospace Center (DLR), Institute of Communications and Navigation, Oberpfaffenhofen,
+82234 Wessling, Germany
+SUMMARY
+The land mobile satellite (LMS) propagation channel is frequently described using statistical models. These
+models usually make different assumptions regarding the behavior of the direct signal, the diffuse
+multipath component and the shadowing effects. This paper analyzes the theoretical formulation and
+implementation of time-series synthesizers based on three typical statistical models: Loo, Corazza–Va-
+talaro and Suzuki, describing their similarities and differences. The discussion is not limited to the
+amplitude of the complex envelope but also to the phase variations and Doppler spectra. Finally,
+guidelines are also provided for comparing model parameters supplied by different authors. Copyright r
+2008 John Wiley & Sons, Ltd.
+KEY WORDS:
+generative models; statistical models; land mobile satellite (LMS); narrowband propagation
+channel
+1. INTRODUCTION
+Performance studies of candidate proposals for new land mobile satellite, LMS, systems for
+broadcast and two-way communication applications rely on the use of synthetic time-series
+describing the dynamics of the propagation channel. A number of statistical models exist that
+try to reproduce the channel behavior for a number of propagation scenarios, e.g. open, tree-
+shadowed, suburban, urban, etc. Models such as those of Loo [1], Corazza and Vatalaro (C&V)
+[2] or Suzuki [3] may be considered typical examples that are often used for describing the
+*Correspondence to: F. P. Fontan, ETS Ing. de Telecomunicacio´ n, Universidad de Vigo, Campus Universitario,
+E-36200 Vigo, Spain.
+yE-mail: fpfontan@tsc.uvigo.es
+Copyright r 2008 John Wiley & Sons, Ltd.
+
+dynamics of the narrowband LMS channel both for geostationary orbit (GEO) and non-GEO
+satellite-based systems. This paper deals with time-series generators based on those statistical
+models.
+Two main elements are considered in narrowband channel modeling, namely, the direct signal
+and diffuse multipath. Assumptions are made as to the statistical behavior of these two
+components. Typical assumptions such as lognormal direct signal variations due to shadowing
+plus a constant multipath power or constant direct signal plus multipath multiplied by
+lognormal shadowing variations are quite common, and their associated complementary
+cumulative distribution functions, CCDFs, have been shown to agree fairly well with
+experimental data statistics [1,2,4].
+One basic application of statistical models is generating time-series for dynamic system
+performance evaluation. Statistical models, conversely to what happens for purely empirical
+models, are very well suited for generating time-series. Statistical models make a number of
+physical assumptions on the behavior of the channel’s main elements: the direct signal and the
+(diffuse) multipath component. However, their parameters must be extracted from experimental
+data. Thus, statistical models represent an intermediate stage between purely empirical models
+and those of physical or deterministic nature.
+In this paper, attention is paid to the narrowband channel case, which is the most probable
+condition found in practice in the LMS channel [4]. Events in which the channel gives rise to
+large time dispersion are seldom found, and correspond to spots along the mobile terminal route
+clear of near obstacles so that far echoes with long excess delays can reach the receiver from
+large
+terrain
+and
+building
+features
+(especially
+specular
+rays).
+Through
+geometrical
+considerations, it may be concluded that far echoes will more likely occur at low satellite
+elevations, while, for the higher elevations, Snell’s law of reﬂection will not be fulﬁlled except for
+very high obstacles.
+The term time-series is used here (narrowband case) to refer to the variations in the complex
+envelope of the received signal, i.e. both amplitude and phase. When wideband conditions occur,
+the term time-series would refer to the complex series for the different taps in a tapped delay-line
+channel model. When a narrowband channel is simulated, the transmitted signal is multiplied by
+the synthesized complex-envelope variations that encompass both the shadowing, fading and
+Doppler phenomena.
+Another feature of interest is the rate of change of the different channel components involved:
+shadowing and multipath. Multipath fading is produced as a consequence of ray interference,
+and gives rise to signal enhancements and cancellations taking place in a fraction of the
+wavelength: a maximum of two peaks and two troughs can be observed within one wavelength.
+On the other hand, shadowing is a slower process, which is directly related to the sizes of the
+environmental features in the near vicinity of the terminal.
+Furthermore, in the LMS channel, shadowing effects may show signiﬁcant changes in received
+level due to large environmental features, e.g. received levels at a moving terminal alternating
+line-of-sight (LOS) and blocked conditions. Typically, these pronounced, larger-scale variations
+can be modeled into different ‘states’ (e.g. using Markov chains), i.e. the LOS and non-LOS
+states. Sometimes, it is best to deﬁne the so-called GOOD and BAD states that refer to LOS or
+light shadowing conditions, and moderate to heavy shadowing conditions, respectively.
+On the other hand, the shadowing can also induce smaller-scale signal level changes around a
+given mean value. For instance, this occurs when the terminal traverses a non-uniform tree-
+shadowed area, i.e. different branch and leaf densities.
+F. P. FONTAN ET AL .
+292
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Combined statistical distributions such as those of Loo, C&V or Suzuki [1–4] agree very well with
+measured data when the shadowing conditions do not change drastically, i.e. when the received
+signal remains in the same ‘state’. However, when used to model situations where both LOS
+conditions and deep shadowing conditions are found, then the agreement may not be very good.
+This is illustrated in Figures 1 and 2. In Figure 1 a time-series measured in a tree-shadowed
+area [4] is shown together with its corresponding probability density function (pdf). In Figure 2
+the overall CCDF corresponding to the time-series in Figure 1 is shown. It can be observed how
+the CCDF curve (or its corresponding pdf) may be split into two distinct regions corresponding
+to the blocked and non-blocked conditions. This CCDF cannot be described by means of a
+single theoretical distribution: note the inﬂection point clearly indicating two differentiated
+behaviors. However, if the total time-series is split into homogeneous (same state) segments,
+good ﬁts may be obtained between measured and theoretical distributions.
+Thus, a two-stage approach in the description of shadowing effects is often assumed, as
+described in Figure 3. In the ﬁgure, three different shadowing/fading rates are sketched:
+1
+very slow variations,
+2
+slow variations,
+3
+fast variations.
+The very slow variations correspond to shadowing events caused by single large features or
+grouped features: trees, houses, etc., which can be mapped to a single Markov state. The slow
+variations are caused by the non-uniformity of single large obstacles; for instance, different
+branch densities in a group of trees or different building heights in a street. The fast variations
+are caused by multipath.
+These observations clearly suggest that combinations of distributions such those proposed by
+Loo, C&V or Suzuki cannot be used directly for characterizing the overall channel dynamics:
+GOOD and BAD states together. Rather, a combination of distributions is required. The
+overall pdf in such cases will follow the general expression given below where GOOD and BAD
+shadowing sections are found along the terminal’s route:
+fOverallðrÞ ¼ pGOOD  fGOODðrÞ þ pBAD  fBADðrÞ
+ð1Þ
+Figure 1. S-band measured time-series in a tree-shadowed environment and 401 elevation [4].
+REVIEW OF GENERATIVE MODELS
+293
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+with pGOOD the probability that the link is in the GOOD shadowing conditions, fGOOD the pdf
+of the amplitude variations (r) when in the GOOD condition, pBAD the probability of the link
+being under BAD shadowing conditions and fBAD the pdf of the signal variations when in the
+BAD condition.
+This paper deals only with those statistical models that describe the signal variations within
+one of the possible ‘states’ (Figure 3). Those models still have to account for multipath and
+smaller-scale shadowing effects. This means that fGOOD and fBAD result from the combination
+of a distribution describing multipath and another describing the smaller range shadowing
+Figure 2. Measured distributions: overall, GOOD and BAD states, corresponding to the series in Figure 1.
+Figure 3. Markov model and different rates of change in the narrowband received amplitude within each
+state.
+F. P. FONTAN ET AL .
+294
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+effects. For an overall description of a Markov chain-based model see Reference [5]. In that
+paper, a summary of parameters for L- and S-band is provided including Loo distribution
+parameters and state transition probabilities.
+One ﬁnal aspect is that of the spectral shaping of the multipath contribution. For
+reproducing the Doppler effects, the U-shaped, Jakes spectrum [6] model is often used. A more
+realistic approach seems to be one assuming a Butterworth model according to [7]. However, in
+this paper simulations are only performed using the classical Jakes spectrum. To this spectrum,
+a delta for the direct component must be added. Spectral shaping is achieved through the
+coloring (ﬁltering) of two white Gaussian noise sources in quadrature.
+2. LMS STATISTICAL CHANNEL MODELS
+In the cellular/terrestrial channel, multipath effects are best described by means of the Rayleigh
+distribution, which assumes that the direct signal is totally blocked. However, for the LMS
+channel, the most commonly used distribution is that of Rice, which assumes that the direct
+signal may be attenuated but is not negligible. In any event, the Rice distribution encompasses
+the Rayleigh distribution as a special case when the direct signal is equal to zero.
+The Rice distribution is used due to the fact that LMS systems need to operate with small
+fade margins and the direct signal must be present and unshadowed. However, recently, with the
+on-going interest and the standardization activities underway in the ﬁeld of direct satellite to
+mobile TV broadcast systems, Satellite Services for Portable devices (DVB-SSP) [8], it is
+expected that larger fade margins than those of earlier systems (Globalstar, Iridium, etc.) will be
+available. Thus, it is interesting to revisit the existing models and reﬁne their parameters,
+especially for heavier shadowing conditions [5].
+In spite of the expected fade margin increase, still, the direct signal must be either completely
+unblocked or only moderately shadowed. Purely Rayleigh conditions, implying that the direct
+signal is totally lost, are of little use unless the amount of diffuse multipath power is large
+enough.
+Normally, to make LMS communications or broadcast systems feasible, multi-satellite
+diversity techniques will be required to achieve acceptable levels of availability. In broadcast
+systems, terrestrial gap-ﬁllers could provide the required availability within urban areas,
+whereas satellite diversity would be used in highways or suburban areas.
+Here, we will be assuming signals normalized with respect to the free space (FS) level. Thus,
+r(t) or r(x) represents the normalized complex envelope at a given point in time, t, or location, x.
+The normalized voltage, received under FS conditions, will be set such that jrðtÞj ¼ jrðxÞj ¼ 1 or,
+in dB, 20 log jrðtÞj ¼ 20 log jrðxÞj ¼ 0 dB.
+The actual received power and voltage are linked through p ¼ v2=ð2RÞ where R is the load
+resistance. Normalizing with respect to FS received power yields
+p0 ¼ p
+pFS
+¼ v2=2R
+v2
+FS=2R ¼ v2
+v2
+FS
+¼ r2
+ð2Þ
+Variable p0 is the normalized power and r, actually jrj, the normalized voltage. Thus, if the
+normalized
+voltage
+is,
+for
+example,
+r 5 0.3,
+this
+is
+equivalent
+to
+a
+level
+of
+20 log(0.3) 5 10.46 dB with respect to the FS level.
+REVIEW OF GENERATIVE MODELS
+295
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+The Rice distribution depends on two parameters, the normalized direct ray amplitude, a
+(ﬁxed vector), and the normalized average power of the multipath component (random vector),
+2s2, or, in dB, MP 5 10 log(2s2), where MP stands for multipath power. As said, if a 5 0, the
+Rice distribution becomes a Rayleigh distribution.
+Depending on the assumptions, two interpretations can be made of the Rice distri-
+bution [9]:
+Assumption (a): The power of the ﬁxed vector is constant while the overall power of the
+combination of the ﬁxed and random vectors varies. In this case, the average overall power
+is given by the expression
+a2 þ 2s2 ¼ a2ð1 þ kÞ=k
+ð3Þ
+where k ¼ a2=2s2 is the ﬁxed-to-random vector power (carrier-to-multipath) ratio.
+Assumption (b): The overall power (ﬁxed plus random vector) remains constant, but the
+powers of both components vary.
+In the two cases, the shapes of their cumulative distribution functions (CDFs) are identical
+except for an offset in the signal level axis (expressed in dB) of
+10 log k þ 1
+k
+
+
+dB
+ð4Þ
+The Loo distribution [1] is based on the Rice distribution. In this case, assumption (a) is made,
+i.e. the direct signal is constant while the overall signal power varies. The received signal is
+supposed to follow a Rice distribution with parameters a and 2s2, i.e.
+f ðrjaÞ ¼ r
+s2 exp  r2 þ a2
+2s2
+
+
+I0
+ra
+s2
+
+
+ð5Þ
+with rX0. This is valid for short sections of the traveled route. For longer sections, the direct
+signal amplitude is assumed to vary according to a lognormal distribution, i.e.
+f ðaÞ ¼
+1
+Npa
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ðlnðaÞ  MNpÞ2
+22
+Np
+"
+#
+¼
+8:686
+dBa
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  20 logðaÞ  MdB
+ð
+Þ2
+22
+dB
+
+
+ð6Þ
+with
+rX0,
+M
+and
+S
+are
+the
+mean
+and
+the
+standard
+deviation
+of
+its
+associated
+normal distribution for the direct signal’s amplitude either in Nepers (ln) or in dB
+(20 log), where the expression 8:686 lnðxÞ ¼ 20 logðxÞ is used for unit conversion. Thus, the
+conversion of parameters in Nepers and dB is straightforward, i.e. MdB ¼ 8:686MNp and
+dB ¼ 8:686Np.
+Moreover, the Loo model assumes that the received complex envelope consists of the sum of
+two phasors, i.e.
+rT expðjfTÞ ¼ rD expðjfDÞ þ rM expðjfMÞ
+ð7Þ
+where subscript T indicates total or overall, D direct signal and M multipath. As indicated
+above, the direct signal amplitude is lognormally distributed due to shadowing, while the
+multipath component parameter, 2s2, remains constant.
+F. P. FONTAN ET AL .
+296
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+The overall distribution i.e. for longer, homogeneous (same state) sections of mobile route is
+given by
+f ðrÞ ¼
+Z 1
+0
+f ðrjaÞf ðaÞ da
+¼
+8:686r
+s2dB
+ﬃﬃﬃﬃﬃ
+2p
+p
+Z 1
+0
+1
+a exp  ð20 logðaÞ  MdBÞ2
+22
+dB
+
+
+exp  r2 þ a2
+2s2
+
+
+I0
+ra
+s2
+
+
+da
+ð8Þ
+where s ¼
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+10MP=10=2
+p
+, with MP the normalized average multipath power expressed in dB.
+The Loo distribution is very versatile as it includes special cases such the normal and the Rice
+distributions for large values of a, and the Rayleigh distribution when the value of a is
+negligible. This property makes this distribution valid for a very wide range of conditions
+spanning from LOS to heavily shadowed (blockage) conditions [4].
+For convenience, we reproduce here the formulation used by Loo in [1] and present its
+equivalent parameters using the conventions of this paper. Thus, the expression in [1] for the
+Loo pdf was
+f ðrÞ ¼
+Z 1
+0
+f ðrjzÞf ðzÞ dz ¼
+r
+b0
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+2pd0
+p
+Z 1
+0
+1
+z exp  ðlnðzÞ  mÞ2
+2d0
+
+
+exp  r2 þ z2
+2b0
+
+
+I0
+rz
+b0
+
+
+dz
+ð9Þ
+where the direct signal is called z, b0 is equivalent to s2, m to MNp and
+ﬃﬃﬃﬃ
+d0
+p
+to SNp. Later, in
+Section 4 where several cases are discussed and simulated, this issue of parameter equivalences is
+further discussed.
+In the case of the C&V [2] model, similar but not identical assumptions are made; i.e. the
+overall received amplitude, r, over long lengths of the mobile route (and within a given Markov
+state) is given by
+f ðrÞ ¼
+Z 1
+0
+f ðrjsÞf ðsÞ ds
+ð10Þ
+with rX0, where f ðrjsÞ is the Rice pdf conditioned on a given shadowing level, s; thus [2],
+f ðrjsÞ ¼ 2ðk þ 1Þ r
+s2 exp ðk þ 1Þ r
+s
+ 2
+k
+
+
+I0 2 r
+s
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+kðk þ 1Þ
+p
+
+
+ð11Þ
+where k is the carrier-to-multipath ratio (in linear units) as deﬁned previously. This form of the
+Rice distribution results from assumption (b) discussed above.
+Variable s describing the shadowing effect is deﬁned by the expression a2 þ 2s2 ¼ s2 that
+represents the total normalized power, including the direct and the multipath components. The
+shadowing variable, s, is assumed to follow a lognormal distribution given by
+f ðsÞ ¼
+1
+sNP
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ðlnðsÞMNpÞ2
+22
+NP
+
+
+¼
+8:686
+sdB
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ð20 logðsÞMdBÞ2
+22
+dB
+
+
+ð12Þ
+Note that s2 represents a power, while s represents a voltage, thus the use of 20 log(s) for
+converting it to dB.
+The overall signal envelope can be interpreted as the product of two independent processes,
+i.e. rC V ¼ rRicesLN. In terms of phasors, the overall received complex envelope is given by
+rT expðjfTÞ ¼ s½rD expðjfDÞ þ rM expðjfMÞ
+ð13Þ
+REVIEW OF GENERATIVE MODELS
+297
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+That is, a real, lognormally distributed series, s, is multiplied by a Rice distributed complex
+phasor.
+The essential difference between the Loo model and that of C&V is this assumption of
+independence. For independent s and r distributions, the following expression is valid [2,10]:
+fC VðrÞ ¼
+Z 1
+0
+1
+s fRice
+r
+s
+ 
+fLNðsÞ ds
+ð14Þ
+with rX0. Comparing (10) and (14), it is possible to arrive at the expression [2]
+f ðrjsÞ ¼ 1
+s fRice
+r
+s
+ 
+D
+r
+s2s2
+R
+exp  1
+2
+r2
+s2s2
+R
+þ 2k
+
+
+
+
+I0
+r
+ssR
+ﬃﬃﬃﬃﬃ
+2k
+p
+
+
+ð15Þ
+which implies that s2
+R ¼ ½2ðk þ 1Þ1. We can calculate the corresponding CDF using
+CDFðRÞ ¼ ProbðrpRÞ ¼
+Z 1
+0
+Z R
+0
+1
+s fRice
+r
+s
+ 
+fLNðsÞ ds dr
+¼ 1  E Q
+ﬃﬃﬃﬃﬃ
+2k
+p
+; R
+s
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+sðk þ 1Þ
+p
+
+
+
+
+ð16:aÞ
+or, equivalently,
+CCDFðRÞ ¼ Probðr4RÞ ¼ E Q
+ﬃﬃﬃﬃﬃ
+2k
+p
+; R
+s
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+sðk þ 1Þ
+p
+
+
+
+
+:
+ð16:bÞ
+where E[] is the average with respect to s, and Q is Marcum’s Q function given by
+Qða; bÞ ¼
+Z 1
+a
+x exp  x2 þ a2
+2
+
+
+I0ðaxÞ dx
+ð17Þ
+where a and b are nonnegative real numbers [11].
+Again, for reference, the original formulation used in C&V’s paper [2] is reproduced here.
+Thus, the expression for f(r|s) is identical to (11) while the lognormal pdf was in the form
+f ðsÞ ¼
+1
+ﬃﬃﬃﬃﬃ
+2p
+p
+hss
+exp  1
+2
+lnðsÞ  m
+hs
+
+2
+"
+#
+ð18Þ
+where h 5 ln(10)/20 5 1/8.686, m is in Nepers, s is in dB and parameter k is in linear units.
+In the same way as in the Loo case, the C&V distribution encompasses other distributions as
+special cases: if k 5 0, i.e. when there is no direct signal present, the Suzuki distribution
+(described below) results; in case S 5 0 (the standard deviation of the lognormal part), the C&V
+distribution tends to a Rice distribution.
+In the Suzuki distribution [3] case, similar assumptions are made, i.e. the fast variations due
+to multipath are Rayleigh distributed, i.e.
+f ðrjsÞ ¼ r
+s2 exp  r2
+2s2
+
+
+ð19Þ
+with rX0. The distribution parameter, 2s2, remains constant for short sections of the route. For
+longer routes, lognormal variations of s can be assumed, i.e.
+f ðsÞ ¼
+1
+Nps
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ðlnðsÞ  MNpÞ2
+22
+Np
+"
+#
+¼
+8:686
+dBs
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ð20 logðsÞ  MdBÞ2
+22
+dB
+
+
+ð20Þ
+F. P. FONTAN ET AL .
+298
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+The overall Suzuki distribution is given by
+f ðrÞ ¼
+Z 1
+0
+f ðrjsÞf ðsÞ ds ¼ 8:686r
+dB
+ﬃﬃﬃﬃﬃ
+2p
+p
+Z 1
+0
+1
+s3 exp  ð20 logðsÞ  MdBÞ2
+22
+dB
+
+
+exp  r2
+2s2
+
+
+ds
+ð21Þ
+This distribution, typical in cellular mobile applications, has been included in this paper on the
+LMS channel given that, as discussed earlier, larger fade margins are expected to be available in
+new SSP broadcast systems, allowing limited operation within intermediate to heavy shadowing
+cases. Moreover, a similar distribution, discussed below, was proposed by Lutz et al. [12] for the
+BAD state.
+In phasor form, the Suzuki distributed complex envelope consists of a single component, that
+of the multipath or random component, whose parameter, s, is slowly changing as the user
+terminal moves along its route, i.e.
+rT expðjfTÞ ¼ srM expðjfMÞ
+ð22Þ
+Parameter s is the mode of the Rayleigh distribution, and its corresponding root mean square
+(RMS) value is
+ﬃﬃﬃﬃﬃﬃﬃ
+2s2
+p
+. Similar to what happened for the other two distributions, special or
+extreme cases exist in which the Suzuki distribution matches simpler distributions, e.g. if S 5 0 a
+Rayleigh distribution results.
+As just mentioned, in some studies, as in [12], it is not the normalized received amplitude
+(voltage) that is modeled but the normalized power, p0, where p0 ¼ r2. In this case, for heavy-
+shadowed environments, e.g. urban areas, similar assumptions were made to those of the Suzuki
+distribution.
+To a Rayleigh distribution for the amplitude, r, corresponds an exponential distri-
+bution for the power, p0. In this case, the normalized received power distribution is
+given by
+f ðp0js0Þ ¼ 1
+s0
+exp  p0
+s0
+
+
+ð23Þ
+with p0X0, and where s0 is the average (and also the standard deviation) of the distribution. The
+relationship s0 ¼ 2s2 is fulﬁlled; that is, the average of the distribution of the power is equal to
+the RMS squared value of the distribution for the amplitude.
+In addition, s0 is assumed to be lognormally distributed, i.e.
+f ðs0Þ ¼
+1
+Nps0
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ðlnðs0Þ  MNpÞ2
+22
+Np
+"
+#
+¼
+4:343
+dBs0
+ﬃﬃﬃﬃﬃ
+2p
+p
+exp  ð10 logðs0Þ  MdBÞ2
+22
+dB
+
+
+ð24Þ
+where MdB and SdB are the mean and the standard deviation of 10 log(s0). The overall
+distribution of the normalized received power variations (within a heavy-shadowed state) is
+given by
+f ðpÞ ¼
+Z 1
+0
+f ðpjs0Þf ðs0Þ ds0 ¼
+4:383
+dB
+ﬃﬃﬃﬃﬃ
+2p
+p
+Z 1
+0
+1
+s2
+0
+exp  10 logðs0Þ  MdB
+½
+2
+22
+dB
+
+	
+exp  p0
+s0
+
+
+ds0
+ð25Þ
+Note that the basic difference between the parameters of the above distribution and those of
+Suzuki is that
+MdBðSuzuki; voltageÞ ¼ MdBðLutz; powerÞ  3 dB
+ð26Þ
+REVIEW OF GENERATIVE MODELS
+299
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+while SdB(Suzuki) 5 SdB(Lutz). The above relationships are important when trying to use model
+parameters reported in the literature. It is important to understand the different conventions
+taken and make the necessary conversions.
+Other, more sophisticated models have been proposed, which, instead of two or three
+parameters, require four or more. An enhancement of the Loo model was proposed in [13],
+where, as in Loo’s model, the direct signal is subjected to lognormal variations, s1; but, in this
+case, also the multipath component undergoes its own lognormal variations, s2. In phasor form,
+this model follows the expression
+rT expðjfTÞ ¼ s1rD expðjfDÞ þ s2rM expðjfMÞ
+ð27Þ
+An evolution of the C&V model was proposed in [14,15] called the generalized lognormal model.
+In this case, in addition to the Ricean distributed series multiplied by slower, lognormal
+ﬂuctuations, a new Rayleigh phasor is considered, i.e.
+rT expðjfTÞ ¼ s½rD expðjfDÞ þ rM1 expðjfM1Þ þ rM2 expðjfM2Þ
+ð28Þ
+Many other models have been proposed in the literature. In [16] a comprehensive list and a
+description of statistical models are provided. They all provide reasonable explanations for the
+time/traveled distance evolution of the received signal. However, from a system analysis point of
+view, such increased complexity, which is important from the point of view of fully
+understanding the channel, may not be necessary in most cases.
+3. GENERATING SYNTHETIC TIME-SERIES
+For simulation purposes, the previously described statistical models translate into circuit form
+as shown in Figures 4 and 11–13. These circuital representations not only consider the
+reproduction of the amplitudes (magnitude of the complex envelope) but also take into
+consideration the different rates of variation found in real-life conditions whereby multipath
+fading is fast varying while shadowing is slowly varying. Additionally, phase and Doppler
+spectra
+characteristics
+are
+also
+introduced
+in
+the
+synthesized
+complex
+envelopes,
+rTðtÞ expðjfTðtÞÞ.
+Figure 4. Circuit implementation of the Loo model with Jakes multipath Doppler shaping.
+F. P. FONTAN ET AL .
+300
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Figure 4 shows the circuit implementing the Loo model: two zero-mean and unit-standard
+deviation Gaussian series in quadrature are passed through a unit-energy, low-pass, U-shaped
+ﬁlter thus simulating the so-called Jakes spectrum [6] corresponding to an uniform azimuth
+angle-of-arrival distribution of the multipath contributions. A constant elevation with respect to
+the receive antenna of 01 is also assumed in the Jakes model. The maximum Doppler spread is
+fmax ¼ v=l, with v the mobile speed. The spectral shaping is described by the expression
+SDopplerðf Þ ¼
+A
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+1ðf =fmaxÞ2
+p
+for jf jpfmax
+0
+for fj jpfmax
+8
+<
+:
+ð29Þ
+where the constant A can be used to force an overall ﬁlter energy equal to one so that the
+standard deviation of the complex Gaussian process (multipath components) is not changed
+after ﬁltering. Figure 5 shows a simple implementation of the Jakes Doppler ﬁlter based on
+calculating the inverse fast Fourier transform (IFFT) of the ﬁlter’s frequency response, also
+shown in the ﬁgure.
+An alternative, more realistic Doppler power spectrum is described in [6,17]:
+SDopplerðf Þ ¼
+0
+jf j 4 fmax
+A
+4 sin bm
+1
+fmax
+
+
+fmax cos bm p jf j p fmax
+A
+fmax
+p
+2  sin1
+2 cos2 bm1ðf =fmaxÞ2
+1ðf =fmaxÞ2
+h
+i
+n
+o
+jf j o fmax cos bm
+8
+>
+>
+>
+>
+<
+>
+>
+>
+>
+:
+ð30Þ
+which corresponds to the case where the multipath contributions are also spread out in elevation
+up to a maximum/minimum angle, 7bm.
+After Doppler shaping (unit-energy ﬁlter), the resulting complex series is multiplied by s,
+with 2s2 being the normalized average multipath power.
+The lower rail in the diagram in Figure 4 simulates the direct signal’s amplitude and phase
+variations. First, an M (dB) mean and S (dB) standard deviation Gaussian distributed series is
+generated. The series, in dB, is converted to linear units (lognormal distributed) by computing
+its antilogarithm a ¼ 10A=20. Then, the phase variations in the direct signal are introduced.
+These are assumed to be linearly varying giving rise to a constant Doppler spectral line that
+depends on the mobile velocity and the angle-of-arrival, the azimuth and the elevation, with
+Figure 5. Jakes Doppler ﬁlter in the frequency domain and its IFFT.
+REVIEW OF GENERATIVE MODELS
+301
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+respect to the mobile trajectory, i.e.
+fDir ¼ ðv=lÞ cos ðjÞ cosðyÞ ¼ fmax cosðjÞ cosðyÞ
+ð31Þ
+with j and y being the relative azimuth (route orientation with respect to the satellite) and
+elevation angles, respectively (Figure 6). The constant phase increment in Figure 4 is given by
+DfDir ¼ 2pfDirTs
+ð32Þ
+where Ts is the sampling interval in seconds used in the time-series synthesizer. In the simulator
+block diagram, Figure 4, an initial phase which can be randomly drawn has been included.
+An alternative to the Jakes Doppler model is using a Butterworth ﬁlter [7] with a transfer
+function given by
+jHButtðf Þj2 ¼
+A
+1 þ ðf =fcÞ2k
+ð33Þ
+where fc is the cutoff frequency and k the order of the ﬁlter.
+Implementing non-symmetric Doppler spectra is also possible by individually ﬁltering the I
+and Q rails and introducing some degree of cross-talk between the two branches [15,18] (Figure
+11).
+The above is only valid for short time intervals. It must be born in mind that two Doppler-
+related phenomena are present, i.e. the Doppler shift and the Doppler spread (Figures 6–8). So
+far, only the Doppler spread has been discussed.
+The Doppler shift is signiﬁcant in non-GEO satellites where the relative positions of the
+satellite and the user change. The Doppler shift depends on the variation of the satellite to
+terminal path length. These shifts can be modeled separately from those due to the movement of
+the terminal through the multiple scattering environment, the Doppler spread.
+Figure 6. Geometry of the Doppler effects.
+F. P. FONTAN ET AL .
+302
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Doppler shifts due to satellite motion can be of several kHz although the variation of these
+shifts is fairly slow, even for LEO satellites at L/S-bands, as illustrated in Figure 7. These
+variations can be tracked and corrected for at the receiver. Figure 8 illustrates both the Doppler
+shift and Doppler spread concepts.
+Coming back to the variations in the amplitude, the direct signal’s amplitude is subjected to
+variations slower than those due to multipath caused by shadowing. The rate of change of these
+slow variations is characterized by a correlation time, tcorr, or, in the traveled distance domain,
+the correlation length, lcorr (Figure 3). Typically, correlation lengths for these slow variations
+may be in the order of 3–5 m [19]. The lognormal series generator (lower rail in Figure 4)
+produces uncorrelated samples that are assumed to be spaced tcorr seconds.
+At the same time, the fast variations are generated with a much higher sampling rate to
+account for the bandwidth of the Doppler spread, i.e. fmax ¼ v=l. This means that a
+combined rate conversion plus interpolation block has to be included (Figure 9). The slowly
+varying direct signal is thus transformed for allowing the complex addition of the direct and the
+multipath phasors performed at the end of the simulation chain (Figure 4).
+As an example, if the mobile terminal travels at a speed, v, of 10 m/s, an L-band carrier
+frequency of, for example, 1500 MHz is used and if a sampling rate of 8 times (Nfmax) the
+Figure 7. Doppler shift caused by a LEO satellite movement at L-band.
+Figure 8. Schematic representation of the Doppler spread and Doppler shift phenomena.
+REVIEW OF GENERATIVE MODELS
+303
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+maximum frequency (4 times the Nyquist rate) is employed, the sampling interval would be
+fsðfast variationsÞ ¼ 8v=l ¼ 8  50 ¼ 400 Hz ) Ts ¼ 0:0025 s
+ð34Þ
+On the other hand, assuming a correlation length of 3 m (equivalent to a correlation time of 0.3 s
+for a mobile velocity of 10 m/s) equal to the sampling spacing for the slow variations, a rate
+conversion of 120 (0.3/0.0025) times is required.
+The rate conversion stage is followed by an interpolation process (Figure 9). A spline (cubic)
+function has been used instead of a linear function. Splines are low-pass ﬁlters with very good
+interpolation properties. Here, no attention has been paid to accurately reproducing the
+spectral/auto-correlation characteristics of the slow variations. This has been considered
+acceptable, given the much wider superposed multipath spectrum, to just aim at preserving the
+value of the correlation time.
+An alternative approach could be generating all samples, slow and fast varying, at the same
+rate (1/Ts) corresponding to the sampling rate of the multipath variations. To impose a slower
+rate on the shadowing variations, a recursive low-pass ﬁlter could be used as suggested in [20]
+(Figure 10). If the correlation length is lcorr, the mobile terminal speed, v, the mean, M, and the
+standard deviation, S, then the multiplicative factors in the ﬁlter (Figure 10) are given by
+b ¼ 
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+1  c2
+p
+and
+c ¼ exp  vTs
+lcorr
+
+
+ð35Þ
+The series from the two rails (slow and fast variations), sampled at the same rate, can now be
+added (complex addition) to produce a Loo distributed time-series that preserves both the rates
+of change of shadowing and multipath, and the Doppler spectra of both the direct signal and the
+multipath (Figure 4).
+Figure 9. Rate conversion and interpolation of slow variations.
+F. P. FONTAN ET AL .
+304
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+To implement a simulator for the C&V model, a multiplication of a Ricean by a lognormal
+process must be performed. Many similarities exist between this and the Loo model
+implementation. In this case, the upper rail in Figure 12 represents the generation of a
+Ricean time-series with direct signal amplitude a ¼
+ﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃﬃ
+k=ðk þ 1Þ
+p
+and multipath parameter
+s ¼ ½2ðk þ 1Þ1=2. This allows that the overall power be equal to one, i.e. a2 þ 2s2 ¼ 1. In the
+ﬁgure, Jakes multipath Doppler shaping has been assumed.
+As for the spectral shaping of the multipath component and the introduction of the direct
+signal phase, they are implemented in the same way as in the Loo case.
+The lower rail in Figure 12 produces the lognormal time-series representing the shadowing
+process. This series varies at a slower rate than the Rice time-series in the upper rail and, hence,
+a rate conversion plus interpolation block or a low-pass ﬁlter, as in Figure 10, is needed prior to
+multiplying both series.
+Finally, the Suzuki simulation circuit is implemented by multiplying a Rayleigh distributed
+series by a slowly varying lognormal series thus modulating the mode of the Rayleigh series.
+Then, the Rayleigh series is spectrally shaped. The slow variations are rate converted and
+interpolated using the same approach as in the two previous cases. For this model, there is no
+Figure 10. Alternative low-pass ﬁltering method for generating slower varying shadowed signals at the
+same rate as the multipath rail.
+Figure 11. Circuit implementation of the Loo model with asymmetric Doppler shaping.
+REVIEW OF GENERATIVE MODELS
+305
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+direct signal involved. The circuit implementation for a Jakes Doppler spectral shaping is shown
+in Figure 13.
+In these three simulators, three Gaussian random generators producing uncorrelated samples
+have been used. A software implementation has been carried out in MATLAB, which has been
+used to produce the example results discussed in the following section. The input parameters
+listed in Table I have been used in each case. The Loo and C&V distributions have three
+parameters, while the Suzuki distribution has only two, thus being less ﬂexible. As already
+mentioned in the previous section, the Suzuki distribution is a special case of the C&V
+distribution. Additional inputs to the simulator are the mobile speed, the correlation time/
+distance and the number of samples per wavelength.
+Figure 12. Circuit implementation of the C&V model with Jakes multipath Doppler shaping.
+Figure 13. Circuit implementation of the Suzuki model with Jakes multipath Doppler shaping.
+Table I. Input parameters in each simulator.
+Loo
+ML
+SL
+MPL
+Corazza and Vatalaro
+MC&V
+SC&V
+KC&V
+Suzuki
+MS
+SS
+F. P. FONTAN ET AL .
+306
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+4. EXAMPLES AND COMPARISONS
+In his original paper [1], Loo identiﬁed in measured data two extreme behaviors: light and heavy
+shadowing conditions, which can be described by two different parameter sets. Later, C&V in [2]
+described the same two cases in terms of their newly deﬁned distribution, thus ﬁtting two
+parameter sets to the experimental CDFs provided in [1]. In this section, these two cases are
+simulated and the generated time-series are compared. In addition, Suzuki distributed time-
+series is also synthesized for comparison, for the heavy shadowing case.
+The main interest in this work is verifying the similarities and differences between the
+generated series, not only in terms of their amplitude CCDFs but also in terms of their phases
+and Doppler spectra. Thus, we analyzed the two cases identiﬁed by Loo: Case 1 corresponding
+to light shadowing conditions and Case 2 to heavy shadowing. Loo provided the model
+parameters reproduced in Table II.
+There is a slight discrepancy between the parameter deﬁnitions in this, and those in Loo’s
+paper. As for the speciﬁcation of the mean and the standard deviation of the direct signal’s
+amplitude variations, for converting linear units to dB, in this paper 20 log has been used,
+whereas in Loo’s paper 10 log was used. Thus, for making comparisons we have worked out the
+linear unit values for d0 and m and converted them to dB using 20 log. The new calculated values
+are summarized in Table III. Regarding the multipath speciﬁcation, Loo deﬁnes the average
+multipath power as 10 logðb0Þ, which is equivalent to 10 log(s2), whereas, in this paper, the
+convention is MP 5 10 log(2s2).
+To clarify things, the calculation steps followed for going from the parameter sets in Table II
+to those in Table III are presented. Thus, the Loo model parameters according to the deﬁnitions
+used in this paper are as follows:
+MdB ¼ 2  10 logðmÞ;
+dB ¼ 2  10 logð
+ﬃﬃﬃﬃ
+d0
+p
+Þ
+and
+MPdB ¼ 10 logðb0Þ þ 3
+ð36Þ
+Hence, the new set of Loo model parameters is listed in Table III.
+On the other hand, C&V in [2] presented their ﬁtted distribution parameters for Cases 1 and
+2. These are listed in Table IV. Again these parameters require their translation according to the
+Table II. Summary of Loo model parameters for Cases 1 and 2 as deﬁned in [1].
+Conditions
+Mean 10 log(m) (dB)
+Standard deviation
+10 logð
+ﬃﬃﬃﬃ
+d0
+p
+Þ (dB)
+Multipath power
+10 log(b0) (dB)
+Infrequent light shadowing
+0.5
+0.5
+8.0
+Frequent heavy shadowing
+17.0
+3.5
+12.0
+Table III. Loo model parameters for Cases 1 and 2 using the conventions assumed in this paper.
+M (dB)
+S (dB)
+MP (dB)
+Average K (dB)
+Light shadowing
+1
+1
+5
+6
+Heavy shadowing
+34
+7
+9
+25
+REVIEW OF GENERATIVE MODELS
+307
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+deﬁnitions used in this paper. The conversion process is as follows:
+MdB ¼ 8:686m;
+dB ¼ s
+and
+KdB ¼ 10 logðkÞ
+ð37Þ
+and these results are summarized in Table V. For Case 1 an alternative value for m is provided,
+which achieves a better ﬁt to the original Loo Case 1 CCDF.
+Figure 14 shows the two families, Loo and C&V, of CCDFs obtained from the theoretical
+expressions given in Section 2. The agreement is quite good even though it can be observed how
+the two distributions are not exactly the same. As said, a closer ﬁt can be achieved if the
+alternative C&V parameters given in Tables IV and V for the light shadowing case are used.
+Next, simulation results corresponding to Case 1, light shadowing, are presented. Figure 15
+shows the resulting Loo and C&V magnitude time-series in dB. As the Suzuki distribution
+assumes that the direct signal is negligible, i.e. aE0, this distribution is not applicable to this
+Table V. C&V model parameters for Cases 1 and 2 using the conventions of this paper.
+M (dB)
+S (dB)
+K (dB)
+Light shadowing
+1.13 (1.9978 improved ﬁt)
+1
+6
+Heavy shadowing
+9.38
+2.5
+2.22
+Figure 14. Loo CCDFs for the light and heavy shadowing cases and corresponding C&V CCDFs.
+Table IV. Original C&V model parameters for Cases 1 and 2 [2].
+m (Np)
+s (dB)
+k (linear)
+Light shadowing
+0.13 (0.23 improved ﬁt)
+1.0
+4.0
+Heavy shadowing
+1.08
+2.5
+0.6
+F. P. FONTAN ET AL .
+308
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+case and no Suzuki series simulation was carried out. Also in Figure 15 the slow variations
+corresponding to the direct signal (Loo) and the multiplicative shadowing process (C&V) are
+shown. The same three random generator series were used in all examples for both cases to
+facilitate the comparisons. The corresponding series CCDFs match the theoretical ones for
+sufﬁciently long simulation runs.
+In the simulations shown, the abscissas are in traveled distance units (meters). The receiver
+was assumed to drive in the direction of the satellite that was supposed to have an elevation of
+301. Thus the direct signal’s Doppler shift is ðv=lÞ cosðbÞ ¼ 10
+0:2 cos ð30Þ cos ð0Þ ¼ 43:3 Hz, where
+a mobile terminal speed of 10 m/s (36 km/h) has been assumed. The maximum multipath
+originated Doppler spread is still 7v/l, i.e. 750 Hz. To these Dopplers, the Doppler shift
+caused by the satellite movement has to be added. We assumed that this satellite contribution
+was zero. The correlation length was set to 9 m for clearer plots, while the number of samples
+per wavelength was set to 4.
+From a detailed inspection of Figure 15 no clear difference may be observed. More
+information can neither be drawn from Figure 16 where the resulting absolute phases of the Loo
+and C&V series are plotted. Figure 17 illustrates the resulting Doppler spectra. It can be
+concluded that, apart from very slight differences in the CCDFs, specially at the tails, the two
+series are practically identical.
+Figure 15. Case 1, light shadowing, time-series for Loo and C&V cases: slow and overall variations in dB.
+Figure 16. Absolute (unwrapped) phases for Case 1 (light shadowing) and Case 2 (heavy shadowing).
+REVIEW OF GENERATIVE MODELS
+309
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Things change quite signiﬁcantly for Case 2, heavy shadowing. Figure 18 illustrates the
+resulting Loo, C&V and Suzuki amplitude series in dB. Now the series look different even
+though there is a good match between their respective CCDFs. We discuss the Suzuki CCDF
+later below. The differences appear in the case of the slow variations, but they need not be
+identical as they represent different things: the direct signal (Loo), the shadowing effect (C&V)
+or the variations in the mode of the Rayleigh distribution, in the Suzuki case.
+More information is provided by the phase series in Figure 16. It is clear that the C&V series
+shows an increasing phase due to the direct signal, only distorted by the multipath-induced
+phase variations present in the Rice process. However, the Loo series is fairly random, meaning
+that as the direct signal is very much attenuated, the phase of the multipath component
+dominates. The phase variations in the Suzuki series should be identical to those in the Loo
+series, as the same three random number series have been used throughout. The difference
+comes when not so attenuated values of the direct ray take place; in those cases, the phase tends
+to approach the same linear trend as in the C&V case.
+Conﬁrmation of the above observations can be found in Figure 19 where the respective
+resulting Doppler spectra are shown. In the C&V case, the U-shaped Jakes spectrum is
+accompanied by a clear delta corresponding to the direct signal, present all the time. In the Loo
+case, the direct signal is less signiﬁcant as it only has an inﬂuence during the periods when it is
+not totally attenuated. In the Suzuki case, the direct ray contribution is altogether absent.
+A short study has also been performed for the Suzuki distribution in comparison with the
+two shadowing cases identiﬁed by Loo. A very good ﬁt to Case 2 has been achieved with
+parameters M 5 12 dB and S 5 1 dB (series in Figure 18). A scan of parameter M from 2 to
+17 dB and S equal to 1 and 2 dB is shown in Figure 20. From this ﬁgure it is possible to see
+that light shadowing conditions are difﬁcult to reproduce with this distribution as the deep fades
+for probabilities of 90% or higher are difﬁcult to reproduce without generating excessively high
+signal enhancements for probability levels of 10% or lower. As for the heavy shadowing cases,
+they are easily reproduced with this distribution.
+From the considerations above, the following observations can be made:
+
+Basically all three models can approximately reproduce the same cumulative distributions,
+except for the Suzuki model that fails in light shadowing conditions.
+Figure 17. Case 1 Doppler spectra of Loo and C&V time-series.
+F. P. FONTAN ET AL .
+310
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+
+However, when observing the local behavior of the resulting fading amplitude series, the
+C&V model produces time-series that, always, present a Ricean character, while the
+Suzuki model always produces series with a Rayleigh character. In the Loo model case, its
+Rice/Rayleigh character depends on how attenuated the lognormal distributed direct
+signal is locally.
+
+The above observations are conﬁrmed when looking at the phase and Doppler
+spectra
+of
+the
+synthetic
+series
+corresponding
+to
+the
+three
+models.
+It
+can
+be
+observed how, in the C&V case, the phase is almost linear with some superposed
+ﬂuctuations. This corresponds to typical Ricean conditions. In the Suzuki case, the
+phase is randomly varying with no dominant trend as it should be for Rayleigh
+fading. For the Loo model, during the deep fades the Rayleigh character dominates,
+while, during the less severe fades, the overall phase reﬂects the variations of the
+direct signal.
+
+Of course, the C&V and Loo models are more versatile that the Suzuki model
+given that this has only two parameters while the others have three parameters.
+In another section, models with more than three parameters have been brieﬂy
+discussed. In the authors’ opinion, if more complex models are needed, it is more
+ﬂexible to incorporate statistical models such as those due to Loo, C&V or Suzuki
+into a Markov state-based framework than using four or more parameter distribu-
+tions.
+Figure 18. Case 2 Loo, C&V and Suzuki time-series: slow and overall variations in dB.
+REVIEW OF GENERATIVE MODELS
+311
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Figure 19. Case 2 Loo, C&V and Suzuki Doppler spectra.
+Figure 20. Scan of Suzuki parameters and comparison with Loo’s Cases 1 and 2 CCDFs.
+F. P. FONTAN ET AL .
+312
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+5. SUMMARY
+In this paper, the assumptions in three statistical models (Loo [1], C&V [2] and Suzuki [3]) used
+for generating narrowband complex-envelope time-series have been reviewed. In the literature
+these models have been shown to provide appropriate ﬁts to measured amplitude data. It has
+been shown that, in most cases, model parameters can be found to produce almost identical
+cumulative distributions for different channel conditions, e.g. light shadowing, heavy
+shadowing.
+However, when synthetic time-series are produced using the various model assumptions, it
+can be found that the amplitude series are locally different in that their character is either more
+Rice-like or Rayleigh-like. These differences can also be found when analyzing the
+corresponding phase series.
+It is not the intention of the authors to indicate which is best, but only to point out their
+similarities and differences. The authors have used in their earlier work the Loo model [1] as the
+basis for their modeling work [4,5,19,21].
+ACKNOWLEDGEMENTS
+The work presented in this paper has been carried out in the frame of EU’s Network of Excellence SatNex
+II on Next Generation Satellite Communications.
+REFERENCES
+1. Loo C. A statistical model for land mobile satellite link. IEEE Transactions on Vehicular Technology 1985;
+34:122–127.
+2. Corazza GE, Vatalaro F. A statistical model for land mobile satellite channels and its application to non-
+geostationary orbit systems. IEEE Transactions on Vehicular Technology 1994; 43:738–742.
+3. Suzuki H. A statistical model for urban radio propagation. IEEE Transactions on Communications 1979;
+25(7):213–225.
+4. Fontan FP, Vazquez-Castro M, Enjamio C, Pita Garcı´a J, Kubista E. Statistical modeling of the LMS channel.
+IEEE Transactions on Vehicular Technology 2001; 50(6):1549–1567.
+5. Fontan FP, Sanchez Lago I, Prieto Cerdeira R, Bolea Alaman˜ ac A. Consolidation of a multi-state narrowband land
+mobile satellite channel model. The Second European Conference on Antennas and Propagation, EuCAP 2007, The
+EICC, Edinburgh, U.K., 11–16 November 2007.
+6. Parsons JD. The Mobile Radio Propagation Channel. Wiley: New York, 2000.
+7. Loo C. Further results on the statistics of propagation data at L-band (1542 MHz) for mobile satellite
+communications. 41st IEEE Vehicular Technology Conference, 19–22 May 1991, St. Louis, MO, USA. 51–56.
+8. DVB Document A110: System Speciﬁcations for Satellite services to Handheld devices (SH) below 3 GHz. March
+2007.
+9. Boithias L. Propagation des ondes radioelectriques dans l’environment terrestre (2nd edn). Dunod: Paris, 1984.
+10. Papoulis A. Probabilities, Random Variables and Stochastic Processes (3rd edn). McGraw-Hill: New York, 1991.
+11. Marcum JI. A Statistical Theory of Target Detection by Pulsed Radar: Mathematical Appendix. RAND Corporation:
+Santa Monica, CA. Research Memorandum RM-753, 1 July 1948. Reprinted in IRE Transactions on Information
+Theory 1960; IT-6:59–267.
+12. Lutz E, Cygan D, Dippold M, Dolainsky F, Papke W. The land mobile satellite communication channel-recording,
+statistics, and channel model. IEEE Transactions on Vehicular Technology 1991; 40(2):375–386.
+13. Hwang SH, Kim KJ, Ahn JY, Whang KC. A channel model for nongeostationary orbiting satellite systems. 47th
+IEEE Vehicular Technology Conference, 1997, Volume 1, 4–7 May 1997, Phoenix, Arizona, USA. 41–45.
+14. Vatalaro
+F.
+Generalised
+Rice-lognormal
+channel
+for
+wireless
+communications.
+Electronic
+Letters
+1995;
+31(22):1899–1900.
+REVIEW OF GENERATIVE MODELS
+313
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+15. Mazzenga F, Vatalaro F. Channel modelling and performance evaluation of LEO systems. AP2000 Millennium
+Conference on Antennas and Propagation. 9–14 April 2000, Davos, Switzerland.
+16. Karaliopoulos MS, Pavlidou FN. Modelling the land mobile satellite channel: a review. IEE Electronics and
+Communications Engineering Journal 1999; 11(5):235–248.
+17. Kanatas AG, Constantinou P. A narrowband land mobile satellite channel software simulator for urban
+environments. International Journal of Satellite Communications 2000; 18(1):17–45.
+18. Patzold M, Li Y, Laue F. A study of a land mobile satellite channel model with asymmetrical Doppler power
+spectrum and lognormally distributed line-of-sight component. IEEE Transactions on Vehicular Technology 1998;
+47(1):297–310.
+19. Fontan FP, Castro MAV, Buonomo S, Baptista P, Arbesser-Rastburg B. S-band LMS propagation channel
+behaviour for different environments, degrees of shadowing and elevation angles. IEEE Transactions on
+Broadcasting 1998; 44(1):40–76.
+20. Saunders SR. Antennas and Propagation for Wireless Communication Systems, Chapter 9. Wiley: New York, 1999.
+21. Castro MAV, Fontan FP, Villamary` n AA, Buonomo S, Baptista P, Arbesser B. L-band land mobile satellite (LMS)
+amplitude and multipath phase modeling in urban areas. IEEE Communications Letters 1999; 3(1):12–14.
+AUTHORS’ BIOGRAPHIES
+Fernando Pe´ rez-Fonta´ n was born in Villagarcı´a de Arosa, Spain. He obtained his
+degree in Telecommunications Engineering in 1982 from the Technical University
+of Madrid and his PhD in 1992 from the same university. After working in
+industry since 1984 he became an assistant professor at the University of Vigo in
+1988. In 1993 he became an associate professor and in 1999 full professor at the
+Signal Theory and Communications Department of the University of Vigo. He
+lectures in Radiocommunication Systems, especially in terrestrial ﬁxed and
+mobile system related topics. He is the author of a number of books and journal
+papers and has been the leader in several projects funded by public and private
+entities. He participates in ITU-R WG3 on Propagation Modeling. He has been
+Management Committee Member of EU’ COST 255 and 280, and currently
+participates with the same role in COST 297.
+Antı´a Mayo Bazarra Telecommunication Engineer, University of Vigo, Spain.
+During her degree she was carrying out research work on channel simulation,
+multipath and airborne communication systems. Antı´a is now working as an IT
+consultant in Madrid, Spain.
+F. P. FONTAN ET AL .
+314
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+David Marote Alvarez Telecommunication Engineer, University of Vigo, Spain.
+In 2006 he was granted by ESA-ESTEC to work on Galileo propagation aspects
+as well as in Ka band reconﬁgurable antennas. Currently he is working as RF
+Engineer in EADS CASA Espacio, Madrid.
+Roberto Prieto-Cerdeira was born in Ourense (Spain) in 1978. He graduated as a
+Telecommunications Engineer from the University of Vigo, Spain in 2002. After
+one year working in the IT industry, he followed postgraduate studies on Space
+Science
+and
+Radioastronomy
+in
+Chalmers
+University
+of
+Technology
+(Gothenburg, Sweden). Since 2004, he has been with the European Space
+Agency (ESA/ESTEC) in the Wave Interaction and Propagation Section where
+he is responsible of radiowave propagation activities for ionospheric and local
+environment effects for satellite communications and for Galileo and EGNOS
+satellite navigation projects.
+Perfecto Marin˜ o received the Ph.D degree in Telecommunications Engineering
+from the Polytechnic University of Madrid, Spain, in 1984. From 1978 to 1993 he
+was Associate Professor in the Electronic Technology Department, University of
+Vigo, Spain. In 1988 he was a Visiting Scientist in the Computer Science
+Department, Carnegie Mellon University, Pittsburgh, PA, USA. Since 1993 he
+has been a Full Professor in the Electronic Technology Department,University
+of
+Vigo.
+His
+main
+research
+interests
+include
+distributed
+electronic
+instrumentation, wireless sensor networks, ﬁeldbus tecnology for industrial
+control and artiﬁcial vision. He has authored more than 20 articles in national
+and international technical journals, coauthored 12 books and published more
+than 100 papers in international conferences. He was technical co-chair for
+international conferences as IECON, ISIE, SIECI, CAIP, CONTROLO, SAAEI,
+and evaluator of several journals such as Mechatronics, IEEE Industrial Electronics, IEEE Industrial
+Informatics, CIT, ESIME, Elsevier and others. He was involved in more than 40 research and applied
+projects for several national enterprises as CITROEN, TELEVES, ENCE, UNION FENOSA, ANFACO,
+CASTROSUA
+and others. He holds an european patent on distributed instrumentation for
+power
+transformers (2005). He is also the Director of the Digital Communications Division from the Electronic
+Technology Department, University of Vigo. He has been distinguished as an Expert on Information
+Technology from the Commission of the European Union for the SPRINT (Luxembourg 1991),
+COPERNICUS (Brussels 1994) and ACTS (Brussels 2002) programs. He has served as General Manager
+of Information Society (2002–2004) and Communications Technology (2002–2006) programs from the
+State R&D Ofﬁce (Autonomous Government, Galicia, Spain). Also is an expert from R&D National
+Program (Ministry of Education and Science, Madrid) in the evaluation of research projects in the ﬁeld of
+information and communication technologies. Senior member of IEEE.
+REVIEW OF GENERATIVE MODELS
+315
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat
+
+Fernando Machado obtained his M.S. degree in Telecommunications Engineering
+in 2000 from the University of Vigo, Vigo, Spain, and his PhD in 2008 from the
+same university. Since 2001, he has been an Assistant Professor in the Electronic
+Technology Department, University of Vigo. He is currently a researcher with the
+Digital
+Communications
+Division,
+Electronic
+Technology
+Department,
+University of Vigo. His main research interests include distributed electronic
+instrumentation,
+multisensor
+networks,
+wireless
+communications
+and
+radiocommunication systems.
+Nu´ ria Riera Diaz graduated in telecommunications engineering from Polytechnic
+University of Catalonia (UPC) in 2001. From 2001 to 2008, she has been with
+DLR as scientiﬁc researcher in the Institute of Communications and Navigation,
+working in Aeronautics and Space as well as IST projects. Since 2008, she is with
+TriaGnoSys as a senior researcher and system engineer. Her research interests and
+expertise are in the ﬁeld of aeronautical communications, satellite systems for air
+trafﬁc
+management,
+system
+and
+protocol
+architectures,
+mobile
+personal
+communications and propagation, in particular ray tracing, and narrow-and
+wideband statistical modeling. She has been involved in RTCA and EUROCAE
+working groups.
+F. P. FONTAN ET AL .
+316
+Copyright r 2008 John Wiley & Sons, Ltd.
+Int. J. Commun. Syst. Network 2008; 26:291–316
+DOI: 10.1002/sat

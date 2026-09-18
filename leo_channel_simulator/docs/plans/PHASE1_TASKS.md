@@ -48,8 +48,8 @@
 **目标**：表 3-1 的三个多项式能画出论文图 3-1。
 
 **学习点（先讲懂再动手）**
-- K（Rice 因子）= 直射功率 / 散射功率；低仰角小、高仰角大
-- μ、σ 是阴影分量 ln S（或 log S，**单位待核对**）的均值、标准差
+- K（Rice 因子）= 直射功率 / 散射功率；低仰角小、高仰角大；**表中 K 为线性值**
+- μ 是 ln S 的均值，单位**奈培 Np**；σ 是 20log₁₀(S) 的标准差，单位 **dB**（原文式(3)，h=ln10/20 桥接，详见笔记 08 第 6 节）
 - 多项式只是对农村 L 频段实测数据的经验拟合，超出 20°~80° 不得外推
 
 **任务**
@@ -58,34 +58,36 @@
 |---|------|------|-----------|
 | ☑ | 1.1 | 建目录：`generative/{data,models,metrics,experiments,utils}` 及各级 `__init__.py`；根目录建 `datasets/ checkpoints/ results/ figs/` | 空目录 |
 | ☑ | 1.2 | 写 `generative/utils/seed.py`：`make_rng(seed) -> np.random.Generator`、`seed_everything(seed)`（numpy + torch + cudnn 确定性） | 新文件 |
-| ☑ | 1.3 | 写 `corazza_params(alpha_deg)`，按表 3-1 实现：<br>K(α) = K0+K1·α+K2·α²，K0=2.371, K1=−1.074×10⁻¹, K2=2.774×10⁻³<br>μ(α) = μ0+μ1·α+μ2·α²+μ3·α³，μ0=−2.331, μ1=1.142×10⁻¹, μ2=−1.939×10⁻³, μ3=1.094×10⁻⁵<br>σ(α) = σ0+σ1·α，σ0=4.5, σ1=−0.05 | `generative/data/corazza.py` |
-| ☑ | 1.4 | α 取 20~80° 画 K、μ、σ 三联子图，存 `figs/p1_fig3-1_params.png`，与论文图 3-1 目视对照 | 绘图脚本 |
+| ☑ | 1.3 | 写 `corazza_params(alpha_deg)`，按**原文 Table I** 实现：<br>K(α) = K0+K1·α+K2·α²，**K0=2.731**（学长表 3-1 误印 2.371，2026-09-19 据原文勘误）, K1=−1.074×10⁻¹, K2=2.774×10⁻³<br>μ(α) = μ0+μ1·α+μ2·α²+μ3·α³，μ0=−2.331, μ1=1.142×10⁻¹, μ2=−1.939×10⁻³, μ3=1.094×10⁻⁵<br>σ(α) = σ0+σ1·α，σ0=4.5, σ1=−0.05 | `generative/data/corazza.py` |
+| ☑ | 1.4 | α 取 20~80° 画 K、μ、σ 三联子图，存 `figs/p1_fig3-1_params.png`，与原文 Fig.2 / 论文图 3-1 目视对照 | 绘图脚本 |
 
-**⚠️ Day 1 必须核对的两个疑点（OCR 风险，禁止跳过）**
+**✅ Day 1 两个疑点已闭环（2026-09-19，证据见笔记 08 第 6 节）**
 
-1. **K 的单位**：代入系数后 K(20°)≈1.33、K(80°)≈11.5，这组数值更像 **dB**（Corazza 原始模型农村 K 约 3~14 dB）。代码中先输出 `K_dB`，采样时用 `K_lin = 10**(K_dB/10)`；若图 3-1 趋势/量纲与论文不符，改按线性值处理并在笔记中记录。
-2. **μ、σ 的底与系数准确性**：PDF 提取的系数可能有 OCR 误差，且 σ(20°)=4.5 若按 ln 域约 15 dB、按 log10 域约 35 dB，都偏大。**核对来源：Corazza & Vatalaro, "A statistical model for land mobile satellite channels and its application to nongeostationary orbit systems", IEEE Trans. VT, 1994**（以及该文给出的农村参数表）。核对结果写进 docs/notes/08，代码系数旁注明出处。
+1. **单位**：K 线性、μ 奈培(Np)、σ dB（Corazza & Vatalaro 1994 式(3) 原文定案；Fontan 2008 Table IV 独立旁证）。采样 S = exp(μ + h·σ·z)，h=ln10/20。
+2. **K0 勘误**：原文 Table I 为 **2.731**；学长表 3-1 印 2.371 属笔误（其图 3-1 曲线像素提取对应 2.731）。代码与图已按原文修正重绘。
 
-**验收关卡 G1**：K 随仰角单调上升、σ 单调下降；两个疑点有书面结论（无论是否改值）。
+**验收关卡 G1（已通过）**：K 随仰角单调上升（1.69→11.89）、σ 单调下降（3.5→0.5 dB）；单位与系数均有一手文献结论。
 
 ---
 
 ## Day 2：i.i.d. 复合包络 + 标准化（静态分布做对）
 
+> 详细可执行任务表见 [Day2_TASKS.md](Day2_TASKS.md)（含公式、函数签名、自检步骤、G2 验收项）。
+
 **目标**：固定仰角下生成大样本，分布与 r=R·S 理论分布吻合，复现论文图 3-2/3-3。此日**点与点之间相互独立**，时序相关 Day 3 才加。
 
 **学习点**
-- Rice 采样：两个零均值高斯 x,y（方差 σ₀²）+ 实轴直射分量 m = σ₀√(2K)，R = √((x+m)²+y²)
-- Lognormal 采样：S = exp(μ + σ·z)，z~N(0,1)（若核对后 μ/σ 为 log10 域，则 S = 10^(μ+σz)）
-- 复合分布无闭式解：理论 PDF = ∫ p_R(r/S)·p_S(S)/S dS（式2-23），用数值积分做裁判曲线
+- Rice 采样（原文式(5) 归一化 E[R²]=1）：m=√(K/(K+1))，σ_R=√(1/[2(K+1)])；z1,z2~N(0,1)，R = √((m+σ_R·z1)²+(σ_R·z2)²)
+- Lognormal 采样：μ 单位 Np、σ 单位 dB；z~N(0,1)，**S = exp(μ + h·σ·z)**，h=ln10/20（等价 X_dB~N(8.686μ,σ²)，S=10^(X_dB/20)）
+- 复合分布无闭式解：理论 CDF = 原文式(7)，对 p_S(S) 积分 Marcum Q：F(r)=∫[1−Q₁(√(2K),(r/S)√(2(K+1)))]p_S(S)dS，用数值积分做裁判曲线
 - 数据预处理：`x = (log(r+ε) − μ_log)/σ_log`，ε=1e-6（论文表3-2）；仰角 `α_norm = (α−50)/30` ∈ [−1,1]
 
 **任务**
 
 | ☐ | 编号 | 操作 | 文件/位置 |
 |---|------|------|-----------|
-| ☐ | 2.1 | 实现 `sample_rice_iid(n, K_lin, rng)`、`sample_lognormal_iid(n, mu, sigma, rng, base='ln')`、`sample_corazza_iid(alpha_deg, n, rng)` | `corazza.py` |
-| ☐ | 2.2 | 实现理论裁判：`corazza_pdf_theory(r, K_lin, mu, sigma)` 数值积分（scipy `quad`/向量化积分）；CDF 用 PDF 积分或 Marcum Q（scipy.stats 无内置时用式2-26数值积分） | `corazza.py` |
+| ☐ | 2.1 | 实现 `sample_rice_iid(n, K_lin, rng)`（E[R²]=1 归一化）、`sample_shadow_iid(n, mu_Np, sigma_dB, rng)`（内部用 `H_DB_TO_NEPER`）、`sample_corazza_iid(alpha_deg, n, rng)` | `corazza.py` |
+| ☐ | 2.2 | 实现理论裁判：`corazza_cdf_theory(r, K_lin, mu_Np, sigma_dB)` 用 Marcum Q 对 lognormal 数值积分（scipy `quad`；Q₁ 可用 `scipy.stats.noncentral_chi2` 组合或自写级数）；PDF 由 CDF 加密网格差分或独立积分 | `corazza.py` |
 | ☐ | 2.3 | 在 α = 20/40/60/80° 各生成 10⁶ 个 i.i.d. 样本：经验 PDF/CDF 与理论曲线叠图，计算 KS | 验证脚本 |
 | ☐ | 2.4 | 画多仰角 PDF/CDF 对比图，存 `figs/p1_fig3-2_pdf.png`、`figs/p1_fig3-3_cdf.png` | 绘图脚本 |
 | ☐ | 2.5 | 实现 `fit_standardizer(samples)` / `standardize()` / `inverse_standardize()`、`normalize_alpha()`；自测：反变换后与原序列最大误差 < 1e-10 | `data/transforms.py` |
@@ -111,7 +113,7 @@
 |---|------|------|-----------|
 | ☐ | 3.1 | 实现 `colored_gaussian_jakes(n, fs, fd, rng)`：频域构造双边 Jakes 谱（带小正则防端点奇异），白噪声 FFT → 乘 √S → IFFT，输出实数零均值单位方差序列 | `corazza.py` |
 | ☐ | 3.2 | 实现 `colored_gaussian_lp(n, fs, tau_c, rng)`：ln 域阴影相关序列（一阶 IIR，等效相关时间 tau_c） | `corazza.py` |
-| ☐ | 3.3 | 实现 `generate_corazza_sequence(alpha_deg, length=1000, fs=1000.0, fd=50.0, tau_shadow=0.3, rng=None)`：<br>① x,y = 两路 Jakes 高斯；② m=σ₀√(2K_lin)；③ R=\|(x+m)+jy\|；④ g=低通高斯，S=exp(μ+σ·g)；⑤ r=R·S | `corazza.py` |
+| ☐ | 3.3 | 实现 `generate_corazza_sequence(alpha_deg, length=1000, fs=1000.0, fd=50.0, tau_shadow=0.3, rng=None)`：<br>① x,y = 两路 Jakes 高斯（单位方差）；② m=√(K/(K+1))、σ_R=√(1/[2(K+1)])；③ R=\|(σ_R·x+m)+jσ_R·y\|；④ g=零均值单位方差低通高斯，**S=exp(μ+h·σ·g)**（h=ln10/20）；⑤ r=R·S | `corazza.py` |
 | ☐ | 3.4 | **ACF 自检**：用纯散射 K=0 生成长序列，复过程 ACF 与 J₀(2πf_dτ) 叠图，前 50 个滞后点 RMSE 记录 | `tests/test_acf.py` |
 | ☐ | 3.5 | **LCR 自检**：多个门限下统计向下穿越率（次/秒），与 Rice LCR 闭式公式对比，相对误差 < 15% | `tests/test_lcr.py` |
 | ☐ | 3.6 | 阴影慢变自检：S 序列 ACF 在 τ=tau_c 附近降到 e⁻¹ 量级；目视 r 曲线呈现"快起伏叠加慢包络"两层结构 | 绘图 |
@@ -159,7 +161,7 @@
 
 ## 完成定义（DoD）
 
-- [ ] G1：论文图 3-1 复现，K 单位 / 系数疑点有书面核对结论
+- [x] G1：~~论文图 3-1 复现，K 单位 / 系数疑点有书面核对结论~~ **2026-09-19 通过**：单位裁决 K 线性/μ Np/σ dB（原文式(3)），K0 勘误为 2.731（原文 Table I），详见笔记 08 第 6 节
 - [ ] G2：i.i.d. 样本经验 CDF 与式2-23/2-26 理论曲线 KS < 0.01；图 3-2/3-3 目视复现
 - [ ] G3：包络 ACF 对 J₀(2πf_dτ)、LCR 对 Rice 闭式公式双自检通过
 - [ ] G4：`corazza_train.npz`（10000×1000）固化，同种子字节级可复现，元数据齐全
@@ -174,7 +176,7 @@
 
 | 风险 | 现象 | 对策 |
 |------|------|------|
-| 表3-1 系数 OCR 错误 | 图3-1 形状怪异或 σ 大得离谱 | Day 1 查 Corazza & Vatalaro 1994 原表修正，笔记记录差异 |
+| ~~表3-1 系数 OCR 错误~~ | ~~图3-1 形状怪异或 σ 大得离谱~~ | **已闭环（2026-09-19）**：查到 Corazza & Vatalaro 1994 原文，单位裁决 + K0=2.731 勘误，差异已记入笔记 08 |
 | Jakes 谱端点奇异 | IFFT 后序列出现尖峰/方差不对 | 谱在 ±f_d 端点截断时加 ε 正则，事后强制单位方差归一化 |
 | 阴影与快起伏时间尺度没拉开 | 曲线看不出两层结构 | 调 tau_shadow（0.1~1 s 扫描），以 ACF 双尺度形态为准 |
 | 理论自检对不上 | 先怀疑实现，不怀疑公式 | K=0 退化为 Rayleigh 先过一遍；固定长序列（10⁵ 点）降低统计误差 |
