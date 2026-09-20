@@ -1,7 +1,8 @@
 """Corazza 参考模型（学长论文 2.4.5 节、3.2.1 节；原始出处 Corazza &
 Vatalaro, IEEE TVT 43(3), 1994, DOI:10.1109/25.312773）。
 
-Day 1：实现仰角参数化 corazza_params()。
+Day 1：仰角参数化 corazza_params()。
+Day 2：i.i.d. 采样器 sample_rice_iid / sample_shadow_iid / sample_corazza_iid。
 
 单位约定（已据 1994 原文式(3) 裁决，详见 docs/notes/08）：
   - K     ：线性莱斯因子（功率比，非 dB）
@@ -16,6 +17,8 @@ Day 1：实现仰角参数化 corazza_params()。
 from __future__ import annotations
 
 import numpy as np
+from scipy.stats import ncx2, norm
+from scipy.integrate import quad
 
 #: dB -> 奈培换算因子（幅度/电压域，20log10）。ln S 的标准差 = H * sigma_dB
 H_DB_TO_NEPER = np.log(10.0) / 20.0  # ≈ 0.1151292546；逆换算 1 Np = 8.6858896 dB
@@ -56,3 +59,155 @@ def corazza_params(alpha_deg, check_range: bool = True):
           + _MU_COEFF[2] * alpha ** 2 + _MU_COEFF[3] * alpha ** 3)
     sigma = _SIGMA_COEFF[0] + _SIGMA_COEFF[1] * alpha
     return K, mu, sigma
+
+
+def sample_rice_iid(n: int, K_lin: float,
+                    rng: np.random.Generator) -> np.ndarray:
+    """采样 n 个归一化 Rice 包络 R（E[R^2]=1，Corazza 原文式(5)）。
+
+    物理图景：复基带信号 Z = (m + s_R*z1) + j*(s_R*z2)，
+    实部 = 直射分量 m + 随机多径抖动；虚部只有多径抖动；
+    包络 R = |Z| 就是复平面上该点到原点的距离。
+
+    参数
+    ----
+    n      ：样本个数
+    K_lin  ：线性莱斯因子（不是 dB）= 直射功率/散射功率
+    rng    ：numpy 随机数生成器（由 make_rng 产生）
+
+    返回
+    ----
+    长度 n 的一维数组，每个元素是一个 Rice 分布的包络值（>=0）。
+
+    备注
+    ----
+    m、s_R 由两个条件联立解出：
+      (1) K = m^2/(2*s_R^2)        莱斯因子定义
+      (2) m^2 + 2*s_R^2 = 1        归一化 E[R^2]=1
+    K=0 时 m=0，自动退化为 Rayleigh 分布，无需特判。
+    """
+    # 散射分量 I/Q 每路的标准差（两路散射功率合计 2*s_R^2）
+    s_R = np.sqrt(1.0 / (2.0 * (K_lin + 1.0)))
+    # 直射分量幅度（沿复平面实轴的固定偏移量）
+    m = np.sqrt(K_lin / (K_lin + 1.0))
+
+    # 一次生成 2 行 n 列标准正态数，按行拆成相互独立的 I/Q 两路
+    z = rng.standard_normal((2, n))
+    z1, z2 = z
+
+    # 逐元素计算复包络模长；**2 是乘方（注意不是 ^，^ 在 Python 里是位异或）
+    R = np.sqrt((m + s_R * z1) ** 2 + (s_R * z2) ** 2)
+    return R
+
+
+def sample_shadow_iid(n: int, mu_Np: float, sigma_dB: float,
+                      rng: np.random.Generator) -> np.ndarray:
+    """采样 n 个 Lognormal 阴影分量 S（Corazza 原文式(3)）。
+
+    ln S ~ N(mu_Np, (h*sigma_dB)^2)，h = ln(10)/20。
+    mu 给的是奈培、sigma 给的是 dB，进 exp 前必须用 h 桥接。
+
+    参数
+    ----
+    n         ：样本个数
+    mu_Np     ：ln S 的均值，单位奈培(Np)
+    sigma_dB  ：20*log10(S) 的标准差，单位 dB（原文称 dB spread）
+    rng       ：numpy 随机数生成器
+
+    返回
+    ----
+    长度 n 的一维数组，阴影增益 S（>0；S<1 表示遮挡使信号变小）。
+    """
+    z = rng.standard_normal(n)                      # 一路标准正态
+    S = np.exp(mu_Np + H_DB_TO_NEPER * sigma_dB * z)  # h*sigma 把 dB 换成 Np
+    return S
+
+
+def sample_corazza_iid(alpha_deg: float, n: int,
+                       rng: np.random.Generator) -> np.ndarray:
+    """给定仰角，采样 n 个 i.i.d. 复合包络 r = R * S（Day 2 静态分布）。
+
+    参数
+    ----
+    alpha_deg ：卫星仰角（度），必须在 20~80 拟合范围内
+    n         ：样本个数
+    rng       ：numpy 随机数生成器
+
+    返回
+    ----
+    长度 n 的一维数组复合包络。
+
+    注意
+    ----
+    R、S 共用同一个 rng 串行取数：随机流前后两段天然独立，
+    符合模型 "Rice 与 Lognormal 两过程统计独立" 的前提。
+    切勿在内部另建 make_rng，否则两路随机数会相关/重复。
+    """
+    # Day 1：仰角 -> (线性 K, 奈培 mu, dB sigma)
+    K, mu, sigma = corazza_params(alpha_deg)
+    # 快衰落（直射+多径）与慢阴影分别采样，再逐元素相乘
+    R = sample_rice_iid(n, K, rng)
+    S = sample_shadow_iid(n, mu, sigma, rng)
+    return R * S
+
+
+def marcum_q1(a: float, b: float) -> float:
+    """一阶 Marcum Q 函数 Q1(a, b)。
+
+    物理含义：参数为 (a, b) 的 Rice 分布中，包络超过 b 的概率，即
+    P(R > b)。本模型用它写 Rice 分量的 CDF：
+        F_R(r0) = 1 - Q1(sqrt(2K), r0 * sqrt(2(K+1)))
+
+    数学上用非中心卡方分布的生存函数等价计算：
+        Q1(a, b) = ncx2.sf(b^2, df=2, nc=a^2)
+    （自由度 2、非中心参数 a^2 的非中心卡方变量大于 b^2 的概率）
+
+    参数
+    ----
+    a, b ：非负实数
+
+    返回
+    ----
+    Q1(a, b) ∈ [0, 1]。
+    """
+    return ncx2.sf(b ** 2, df=2, nc=a ** 2)
+
+
+def corazza_cdf_theory(r: float, K_lin: float, mu_Np: float,
+                       sigma_dB: float) -> float:
+    """复合包络 r = R * S 的理论 CDF（Corazza 原文式(7)，数值积分）。
+
+    阴影 S 使 Rice 电平 r/S 随机化；对所有可能的 S 按其 lognormal 概率
+    加权平均，即得复合分布的累积概率 P(R*S <= r)。
+
+    为避免 lognormal 在 S 域的长尾难收敛，做换元 x = ln S：
+        dS = S * dx  ->  被积函数乘 S 后正好抵消，剩下正态密度权重。
+
+    参数
+    ----
+    r        ：待求概率的包络门限（>=0）
+    K_lin    ：线性莱斯因子
+    mu_Np    ：ln S 的均值（奈培）
+    sigma_dB ：20*log10(S) 的标准差（dB）
+
+    返回
+    ----
+    F(r) = P(R*S <= r) ∈ [0, 1]。
+    """
+    # ln S 域的标准差（h 把 dB 换成 Np）
+    s_x = H_DB_TO_NEPER * sigma_dB
+
+    def integrand(x: float) -> float:
+        """被积函数：正态权重 * 条件 Rice CDF。"""
+        # x = ln S 的正态密度（换元后的权重 p_S(S)*S）
+        w = norm.pdf(x, loc=mu_Np, scale=s_x)
+        # 给定 S=exp(x)，r/S 是 Rice 包络电平；其 CDF = 1 - Q1(...)
+        rice_cdf = 1.0 - marcum_q1(
+            np.sqrt(2.0 * K_lin),
+            (r / np.exp(x)) * np.sqrt(2.0 * (K_lin + 1.0)),
+        )
+        return w * rice_cdf
+
+    # 积分区间取 mu +/- 6 个标准差，截断概率 < 1e-9，可忽略
+    return quad(integrand, mu_Np - 6.0 * s_x, mu_Np + 6.0 * s_x)[0]
+

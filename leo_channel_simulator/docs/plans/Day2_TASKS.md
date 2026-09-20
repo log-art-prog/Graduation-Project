@@ -61,9 +61,9 @@ x = ( log(r + ε) − μ_log ) / σ_log        # μ_log, σ_log 由全训练集�
 
 | ☐ | 编号 | 操作 | 预期签名 |
 |---|------|------|----------|
-| ☐ | 2.1 | `sample_rice_iid(n, K_lin, rng)`：按 0.2 生成 n 个 Rice 包络，断言返回数组均值平方≈1（大样本下 |mean(R²)−1|<0.02） | `(n,) np.ndarray` |
-| ☐ | 2.2 | `sample_shadow_iid(n, mu_Np, sigma_dB, rng)`：内部用 `H_DB_TO_NEPER`，按 0.3 生成 S | `(n,) np.ndarray` |
-| ☐ | 2.3 | `sample_corazza_iid(alpha_deg, n, rng)`：调 `corazza_params` 取参，分别采样 R、S，返回 r=R*S | `(n,) np.ndarray` |
+| ☑ | 2.1 | `sample_rice_iid(n, K_lin, rng)`：按 0.2 生成 n 个 Rice 包络，断言返回数组均值平方≈1（大样本下 |mean(R²)−1|<0.02） | `(n,) np.ndarray` |
+| ☑ | 2.2 | `sample_shadow_iid(n, mu_Np, sigma_dB, rng)`：内部用 `H_DB_TO_NEPER`，按 0.3 生成 S | `(n,) np.ndarray` |
+| ☑ | 2.3 | `sample_corazza_iid(alpha_deg, n, rng)`：调 `corazza_params` 取参，分别采样 R、S，返回 r=R*S | `(n,) np.ndarray` |
 
 **自检**：K=0 时 `sample_rice_iid` 应退化为 Rayleigh，理论均值 = sqrt(π/2)·s_R·... 实测 |E[R²]−1|<0.02。
 
@@ -71,9 +71,9 @@ x = ( log(r + ε) − μ_log ) / σ_log        # μ_log, σ_log 由全训练集�
 
 | ☐ | 编号 | 操作 | 说明 |
 |---|------|------|------|
-| ☐ | 2.4 | `marcum_q1(a, b)`：Marcum Q 一阶函数。优先 `scipy.stats.ncx2.sf(b**2, 2, a**2)`（等价于 Q₁(a,b)）；若版本无则自写级数 | 标量或向量 |
-| ☐ | 2.5 | `corazza_cdf_theory(r, K_lin, mu_Np, sigma_dB)`：按 0.4 对 S 数值积分（`scipy.integrate.quad`，积分变量用 x=ln S 避免长尾），返回 F(r) | float |
-| ☐ | 2.6 | （可选）`corazza_pdf_theory`：在加密 r 网格上对 CDF 做中心差分，或独立积分 p_R(r/S)·p_S(S)/S | float |
+| ☑ | 2.4 | `marcum_q1(a, b)`：Marcum Q 一阶函数。用 `scipy.stats.ncx2.sf(b**2, 2, a**2)` 恒等式实现 | 标量 |
+| ☑ | 2.5 | `corazza_cdf_theory(r, K_lin, mu_Np, sigma_dB)`：换元 x=lnS 对正态权重 `quad` 积分（μ±6hσ 区间），σ→0 极限与 scipy 官方 Rice CDF 误差 < 2e-9 | float |
+| ☑ | 2.6 | （PDF 未单独实现）：用 `np.gradient(th_cdf, r_grid)` 由 CDF 数值差分得到，画图精度足够 | — |
 
 **关键坑**：S 的积分上限要取到 μ+5hσ 以上（lognormal 长尾）；用 `quad` 时给 `points`/`limit` 防收敛告警。
 
@@ -81,27 +81,27 @@ x = ( log(r + ε) − μ_log ) / σ_log        # μ_log, σ_log 由全训练集�
 
 | ☐ | 编号 | 操作 | 预期 |
 |---|------|------|------|
-| ☐ | 2.7 | 在 α=20/40/60/80° 各采 n=10⁶ 个 i.i.d. 样本，存内存（不持久化） | 4 组样本 |
-| ☐ | 2.8 | 画经验 PDF（直方图归一化）与理论 PDF 叠图，4 仰角 2×2 子图，存 `figs/p1_fig3-2_pdf.png` | 目视贴合 |
-| ☐ | 2.9 | 画经验 CDF（`np.sort` + 秩）与理论 CDF 叠图，存 `figs/p1_fig3-3_cdf.png` | 目视贴合 |
-| ☐ | 2.10 | 计算 4 仰角 KS 统计量（`scipy.stats.ks_2samp` 或自算 max|F_emp−F_theory|），打印并断言全部 < 0.01 | PASS |
-| ☐ | 2.11 | 物理单调性检查表：打印每仰角 mean(r)、P(r<0.5)；确认 mean 随仰角↑、深衰落概率随仰角↓ | 趋势正确 |
+| ☑ | 2.7 | 在 α=20/40/60/80° 各采 n=10⁶ 个 i.i.d. 样本，存内存（不持久化） | 4 组样本 |
+| ☑ | 2.8 | 画经验 PDF（直方图归一化）与理论 PDF（CDF 差分）叠图，4 仰角 2×2 子图，存 `figs/p1_fig3-2_pdf.png` | 目视贴合 |
+| ☑ | 2.9 | 画经验 CDF（`np.sort` + 秩）与理论 CDF 叠图，存 `figs/p1_fig3-3_cdf.png` | 目视贴合 |
+| ☑ | 2.10 | 自算 max|F_emp−F_theory|，4 仰角 KS = 0.00122/0.00063/0.00056/0.00061，全部 < 0.01 | PASS |
+| ☑ | 2.11 | 物理单调性：mean(r) 0.48→0.98 递增，P(r<0.5) 0.618→0.007 递减 | 趋势正确 |
 
 ### 1.4 标准化器（新建 `generative/data/transforms.py`）
 
 | ☐ | 编号 | 操作 | 说明 |
 |---|------|------|------|
-| ☐ | 2.12 | `fit_standardizer(samples, eps=1e-6)`：返回 `(mu_log, sigma_log)`，即 log(r+ε) 的均值和标准差 | tuple |
-| ☐ | 2.13 | `standardize(r, mu_log, sigma_log, eps=1e-6)` / `inverse_standardize(x, ...)`：往返变换 | array |
-| ☐ | 2.14 | `normalize_alpha(alpha_deg)` / `denormalize_alpha(alpha_norm)`：(α−50)/30 | array |
-| ☐ | 2.15 | 自测：随机 10⁵ 个 r，`inverse_standardize(standardize(r))` 与 r 最大误差 < 1e-10（float64） | PASS |
+| ☑ | 2.12 | `fit_standardizer(samples, eps=1e-6)`：返回 `(mu_log, sigma_log)` | tuple |
+| ☑ | 2.13 | `standardize(r, mu_log, sigma_log)` / `inverse_standardize(x, ...)`：往返变换 | array |
+| ☑ | 2.14 | `normalize_alpha(alpha_deg)` / `denormalize_alpha(alpha_norm)`：(α−50)/30 | array |
+| ☑ | 2.15 | 自测：10⁵ 样本往返最大误差 1.33e-15（< 1e-10，float64 极限） | PASS |
 
 ### 1.5 收尾
 
 | ☐ | 编号 | 操作 |
 |---|------|------|
-| ☐ | 2.16 | 在 [08_corazza实现细节.md](../notes/08_corazza实现细节.md) 第 9 节把"计划函数"更新为实际签名（若与计划有出入） |
-| ☐ | 2.17 | 跑通 `scripts/day2_verify_distribution.py`，把 KS 数值与两张图路径记到当日工作日志 |
+| ☑ | 2.16 | 在 [08_corazza实现细节.md](../notes/08_corazza实现细节.md) 第 9 节更新为实际签名（含位置列） |
+| ☑ | 2.17 | 跑通 `scripts/day2_verify_distribution.py`，KS 数值与图路径已记入本日工作日志 |
 
 ---
 
@@ -109,11 +109,11 @@ x = ( log(r + ε) − μ_log ) / σ_log        # μ_log, σ_log 由全训练集�
 
 全部满足才进入 Day 3：
 
-- [ ] 4 仰角 KS 全部 < 0.01
-- [ ] `figs/p1_fig3-2_pdf.png`、`figs/p1_fig3-3_cdf.png` 目视与论文图 3-2/3-3 趋势一致（高仰角更尖、低仰角更扁）
-- [ ] 单调性：mean(r) 随仰角严格递增，P(r<0.5) 随仰角递减
-- [ ] `sample_rice_iid` K=0 退化 Rayleigh、E[R²]≈1 自检通过
-- [ ] 标准化器往返误差 < 1e-10
+- [x] 4 仰角 KS 全部 < 0.01（实测 < 0.0013）
+- [x] `figs/p1_fig3-2_pdf.png`、`figs/p1_fig3-3_cdf.png` 目视与论文图 3-2/3-3 趋势一致
+- [x] 单调性：mean(r) 随仰角严格递增，P(r<0.5) 随仰角递减
+- [x] `sample_rice_iid` K=0 退化 Rayleigh、E[R²]≈1 自检通过
+- [x] 标准化器往返误差 < 1e-10（实测 1.33e-15）
 
 ---
 

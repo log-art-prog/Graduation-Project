@@ -86,14 +86,14 @@
 
 | ☐ | 编号 | 操作 | 文件/位置 |
 |---|------|------|-----------|
-| ☐ | 2.1 | 实现 `sample_rice_iid(n, K_lin, rng)`（E[R²]=1 归一化）、`sample_shadow_iid(n, mu_Np, sigma_dB, rng)`（内部用 `H_DB_TO_NEPER`）、`sample_corazza_iid(alpha_deg, n, rng)` | `corazza.py` |
-| ☐ | 2.2 | 实现理论裁判：`corazza_cdf_theory(r, K_lin, mu_Np, sigma_dB)` 用 Marcum Q 对 lognormal 数值积分（scipy `quad`；Q₁ 可用 `scipy.stats.noncentral_chi2` 组合或自写级数）；PDF 由 CDF 加密网格差分或独立积分 | `corazza.py` |
-| ☐ | 2.3 | 在 α = 20/40/60/80° 各生成 10⁶ 个 i.i.d. 样本：经验 PDF/CDF 与理论曲线叠图，计算 KS | 验证脚本 |
-| ☐ | 2.4 | 画多仰角 PDF/CDF 对比图，存 `figs/p1_fig3-2_pdf.png`、`figs/p1_fig3-3_cdf.png` | 绘图脚本 |
-| ☐ | 2.5 | 实现 `fit_standardizer(samples)` / `standardize()` / `inverse_standardize()`、`normalize_alpha()`；自测：反变换后与原序列最大误差 < 1e-10 | `data/transforms.py` |
-| ☐ | 2.6 | 确认物理单调性：随仰角升高，包络均值增大、低包络区 CDF 概率减小 | 打印统计表 |
+| ☑ | 2.1 | 实现 `sample_rice_iid(n, K_lin, rng)`（E[R²]=1 归一化）、`sample_shadow_iid(n, mu_Np, sigma_dB, rng)`（内部用 `H_DB_TO_NEPER`）、`sample_corazza_iid(alpha_deg, n, rng)` | `corazza.py` |
+| ☑ | 2.2 | 实现理论裁判：`marcum_q1(a,b)`（`ncx2.sf` 恒等式）+ `corazza_cdf_theory(r, K_lin, mu_Np, sigma_dB)`（换元 x=lnS 对正态权重 `quad` 积分） | `corazza.py` |
+| ☑ | 2.3 | 在 α = 20/40/60/80° 各生成 10⁶ 个 i.i.d. 样本：经验 PDF/CDF 与理论曲线叠图，计算 KS | `scripts/day2_verify_distribution.py` |
+| ☑ | 2.4 | 画多仰角 PDF/CDF 对比图，存 `figs/p1_fig3-2_pdf.png`、`figs/p1_fig3-3_cdf.png` | 同上 |
+| ☑ | 2.5 | 实现 `fit_standardizer` / `standardize` / `inverse_standardize`、`normalize_alpha`/`denormalize_alpha`；往返误差 < 1e-15（float64 极限） | `generative/data/transforms.py` |
+| ☑ | 2.6 | 物理单调性：mean(r) 随仰角 0.48→0.98 递增，P(r<0.5) 0.618→0.007 递减 | 控制台输出 |
 
-**验收关卡 G2**：4 个仰角经验 CDF 与理论 CDF 的 KS < 0.01（i.i.d. 大样本下必须很好，否则公式/系数仍有问题）；论文图 3-2/3-3 目视复现。
+**验收关卡 G2（2026-09-19 通过）**：4 仰角 KS 全部 < 0.0013（20°:0.00122 / 40°:0.00063 / 60°:0.00056 / 80°:0.00061）；PDF/CDF 图与理论曲线目视重合；单调性正确；标准化往返误差 1.33e-15。
 
 ---
 
@@ -162,11 +162,11 @@
 ## 完成定义（DoD）
 
 - [x] G1：~~论文图 3-1 复现，K 单位 / 系数疑点有书面核对结论~~ **2026-09-19 通过**：单位裁决 K 线性/μ Np/σ dB（原文式(3)），K0 勘误为 2.731（原文 Table I），详见笔记 08 第 6 节
-- [ ] G2：i.i.d. 样本经验 CDF 与式2-23/2-26 理论曲线 KS < 0.01；图 3-2/3-3 目视复现
+- [x] G2：~~i.i.d. 样本经验 CDF 与式2-23/2-26 理论曲线 KS < 0.01；图 3-2/3-3 目视复现~~ **2026-09-19 通过**：4 仰角 KS<0.0013，详见 [Day2_TASKS.md](Day2_TASKS.md) 与日志
 - [ ] G3：包络 ACF 对 J₀(2πf_dτ)、LCR 对 Rice 闭式公式双自检通过
 - [ ] G4：`corazza_train.npz`（10000×1000）固化，同种子字节级可复现，元数据齐全
 - [ ] 均值随仰角 Spearman > 0.95；低仰角深衰落概率高于高仰角
-- [ ] log 标准化/反变换往返误差 < 1e-10
+- [x] log 标准化/反变换往返误差 < 1e-10（实测 1.33e-15，float64 极限）
 - [ ] 全程只新增 `generative/` 与数据目录文件，`src/` 零改动
 - [ ] docs/notes 08/09/10 完成，所有"论文未给参数"均标注为复现设定并给出经典文献出处
 

@@ -219,19 +219,23 @@ x = ( log(r + ε) − μ_log ) / σ_log
 
 ---
 
-## 9. 公式 → 计划代码映射
+## 9. 公式 → 代码映射（Day 2 已实现，签名以代码为准）
 
-| 公式/内容 | 计划函数（`generative/data/corazza.py`） |
-|---|---|
-| 原文 Table I、式(8) | `corazza_params(alpha_deg) -> (K_lin, mu_Np, sigma_dB)` |
-| 换算常数 | `H_DB_TO_NEPER = ln(10)/20`（已在 corazza.py 定义） |
-| 式3-7 | `normalize_alpha(alpha_deg)`（放在 `transforms.py`） |
-| 原文式(5) Rice 采样（E[R²]=1） | `sample_rice_iid(n, K_lin, rng)` |
-| 原文式(3) Lognormal 采样 | `sample_shadow_iid(n, mu_Np, sigma_dB, rng)`：S=exp(mu+H·sigma·z) |
-| 复合 PDF | `corazza_pdf_theory(r, K_lin, mu_Np, sigma_dB)`（对 S 数值积分） |
-| 原文式(7) 复合 CDF | `corazza_cdf_theory(r, ...)`（Marcum Q 对 p_S(S) 积分，`scipy.stats.ncx2`/`scipy.special`） |
-| 式3-8 | `fit_standardizer / standardize / inverse_standardize`（`transforms.py`） |
-| 时序序列（Day 3） | `colored_gaussian_jakes / colored_gaussian_lp / generate_corazza_sequence` |
+> 原文 = Corazza & Vatalaro 1994（`docs/references/corazza1994_land_mobile_satellite_channels.pdf`）；
+> 学长 = 陈万埼毕业论文（`docs/references/chen_wanqi_2026_cgan_ngso_thesis.pdf`）。
+
+| 公式/内容 | 实现函数 | 位置 | 原文出处 | 学长论文出处 |
+|---|---|---|---|---|
+| K(α), μ(α), σ(α) 多项式 | `corazza_params(alpha_deg)` | `corazza.py` | **原文式(8)（p.740）+ Table I**（K₀=2.731） | 式(3-3)~(3-5) + 表 3-1（K₀ 误印 2.371） |
+| 换算常数 h=ln10/20 | `H_DB_TO_NEPER` | `corazza.py` | **原文式(3)**（p.739，"h=(ln10)/20"） | 式(2-21) 漏写 h |
+| Rice 采样 E[R²]=1 | `sample_rice_iid(n, K_lin, rng)` | `corazza.py` | **原文式(4) 及正文**（p.739，"σ₀²=1/2(K+1)"） | 式(2-20)（带 Ω，取 Ω=1） |
+| Lognormal 采样 S=exp(μ+hσz) | `sample_shadow_iid(n, mu_Np, sigma_dB, rng)` | `corazza.py` | **原文式(3)**（p.739，μ 单位 Np、σ 单位 dB） | 式(2-21)（σ 隐含奈培） |
+| 复合包络 r=R·S | `sample_corazza_iid(alpha_deg, n, rng)` | `corazza.py` | **原文正文**（p.739，式(3)后 "r=RS"） | 式(2-22) |
+| 一阶 Marcum Q | `marcum_q1(a, b)` = ncx2.sf(b², 2, a²) | `corazza.py` | **原文式(7)**（p.740，"Q is Marcum's Q-function"） | 式(2-24) |
+| 复合 CDF（对 S 积分） | `corazza_cdf_theory(r, K, μ, σ)`（换元 x=lnS） | `corazza.py` | **原文式(7)**（p.740，F=1−E_S{Q(√(2K),(r₀/S)√(2(K+1)))}） | 式(2-26) |
+| log 标准化 | `fit/standardize/inverse_standardize` | `transforms.py` | 原文无（神经网络预处理） | **式(3-8) + 表 3-2**（ε=1e-6） |
+| 仰角归一化 | `normalize/denormalize_alpha` | `transforms.py` | 原文无 | **式(3-7)**（(α−50)/30） |
+| 时序序列（Day 3） | `colored_gaussian_jakes` 等 | `corazza.py`（待实现） | — | — |
 
 ---
 
