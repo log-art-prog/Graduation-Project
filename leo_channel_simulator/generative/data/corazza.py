@@ -211,3 +211,136 @@ def corazza_cdf_theory(r: float, K_lin: float, mu_Np: float,
     # 积分区间取 mu +/- 6 个标准差，截断概率 < 1e-9，可忽略
     return quad(integrand, mu_Np - 6.0 * s_x, mu_Np + 6.0 * s_x)[0]
 
+
+# ============================================================
+# Day 3：时序相关性
+# ============================================================
+
+def colored_gaussian_jakes(n: int, fs: float, fd: float,
+                           rng: np.random.Generator) -> np.ndarray:
+    """生成自相关服从 Jakes 谱的实数高斯色噪声（Day 3 任务 3.1）。
+
+    时域 ACF 理论值：R(τ) = J0(2π fd τ)
+    实现：白噪声 → FFT → 乘 √S_jakes(f) → IFFT → 归一化单位方差。
+
+    参数
+    ----
+    n   ：输出序列长度
+    fs  ：采样率 (Hz)
+    fd  ：最大多普勒频移 (Hz)，须满足 fd < fs/2
+    rng ：numpy 随机数生成器
+
+    返回
+    ----
+    长度 n 的一维数组，零均值、单位方差、近似 Jakes 自相关。
+    """
+    # 1. 白噪声
+    w = rng.standard_normal(n)
+
+    # 2. FFT 到频域
+    W = np.fft.fft(w)
+    f = np.fft.fftfreq(n, d=1.0 / fs)  # 与 W 一一对应的频率（FFT 原始顺序）
+
+    # 3. Jakes 功率谱 S(f) ∝ 1/√(1-(f/fd)²)，|f|<fd
+    eps = 1e-10
+    ratio = f / fd
+    S = np.where(np.abs(ratio) < 1.0,
+                 1.0 / np.sqrt(np.maximum(1.0 - ratio ** 2, eps)),
+                 0.0)
+
+    # 4. 频域滤波：幅度乘 √S（功率乘 S）
+    W_filtered = W * np.sqrt(S)
+
+    # 5. IFFT 回时域，取实部（数值误差残留的虚部丢弃）
+    x = np.fft.ifft(W_filtered).real
+
+    # 6. 强制零均值单位方差
+    x = (x - x.mean()) / x.std(ddof=0)
+    return x
+
+
+def colored_gaussian_lp(n: int, fs: float, tau_c: float,
+                        rng: np.random.Generator) -> np.ndarray:
+    """一阶 IIR 低通高斯色噪声（Day 3 任务 3.2）。
+
+    等效相关时间 tau_c（秒）：ACF 在 τ=tau_c 处降到 e^-1。
+    实现：g[n] = (1-a)*w[n] + a*g[n-1]，a = exp(-1/(fs*tau_c))。
+
+    参数
+    ----
+    n     ：输出序列长度
+    fs    ：采样率 (Hz)
+    tau_c ：目标相关时间 (秒)
+    rng   ：numpy 随机数生成器
+
+    返回
+    ----
+    长度 n 的一维数组，零均值、单位方差、指数衰减自相关。
+    """
+    # 由目标相关时间反推 IIR 系数 a
+    a = np.exp(-1.0 / (fs * tau_c))
+
+    # 白噪声输入
+    w = rng.standard_normal(n)
+
+    # 递推滤波
+    g = np.empty(n)
+    g[0] = (1.0 - a) * w[0]
+    for i in range(1, n):
+        g[i] = (1.0 - a) * w[i] + a * g[i - 1]
+
+    # 归一化零均值单位方差
+    g = (g - g.mean()) / g.std(ddof=0)
+    return g
+
+
+def generate_corazza_sequence(alpha_deg: float, length: int = 1000,
+                              fs: float = 1000.0, fd: float = 50.0,
+                              tau_shadow: float = 0.3,
+                              rng: np.random.Generator | None = None
+                              ) -> np.ndarray:
+    """生成一条 Corazza 复合包络时序序列（Day 3 任务 3.3）。
+
+    r[n] = R[n] * S[n]
+      - R[n]：Rice 快衰落，I/Q 两路独立 Jakes 色噪声构成
+      - S[n]：Lognormal 阴影，一阶 IIR 低通慢变
+
+    参数
+    ----
+    alpha_deg  ：仰角（度），20~80
+    length     ：序列长度，默认 1000（学长论文）
+    fs         ：采样率 (Hz)，默认 1000
+    fd         ：最大多普勒 (Hz)，默认 50
+    tau_shadow ：阴影相关时间 (秒)，默认 0.3
+    rng        ：numpy 随机数生成器；None 时用默认种子
+
+    返回
+    ----
+    长度 length 的一维数组 r[n]，单位与 Rice 包络一致（线性幅度）。
+    """
+    from generative.utils.seed import make_rng
+    if rng is None:
+        rng = make_rng()
+
+    # 1. 仰角 -> Corazza 参数
+    K, mu, sigma = corazza_params(alpha_deg)
+
+    # 2. Rice 分量参数（与 sample_rice_iid 一致）
+    s_R = np.sqrt(1.0 / (2.0 * (K + 1.0)))
+    m = np.sqrt(K / (K + 1.0))
+
+    # 3. 两路独立 Jakes 色噪声（I / Q）
+    x = colored_gaussian_jakes(length, fs, fd, rng)
+    y = colored_gaussian_jakes(length, fs, fd, rng)
+
+    # 4. Rice 包络
+    R = np.sqrt((m + s_R * x) ** 2 + (s_R * y) ** 2)
+
+    # 5. 阴影慢变
+    g = colored_gaussian_lp(length, fs, tau_shadow, rng)
+    S = np.exp(mu + H_DB_TO_NEPER * sigma * g)
+
+    # 6. 复合包络
+    r = R * S
+    return r
+
