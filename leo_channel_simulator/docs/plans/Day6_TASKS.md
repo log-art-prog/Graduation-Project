@@ -27,13 +27,13 @@ PDF L1 用**归一化直方图**而非核密度估计（KDE）。KDE 需要选�
 
 | ☐ | 编号 | 操作 | 文件/位置 |
 |---|------|------|-----------|
-| ☐ | 6.1 | 建 `generative/metrics/` 目录及 `__init__.py` | 目录 |
-| ☐ | 6.2 | 实现 `pdf_l1_distance(r_ref, r_gen, n_bins=100) -> dict`：相同 bins 归一化直方图，逐 bin 差绝对值乘 bin 宽求和 | `metrics/distribution.py` |
-| ☐ | 6.3 | 实现 `ks_distance(r_ref, r_gen) -> dict`：直接 `scipy.stats.ks_2samp`，取 statistic | `metrics/distribution.py` |
-| ☐ | 6.4 | 实现 `wasserstein_distance(r_ref, r_gen) -> dict`：`scipy.stats.wasserstein_distance` | `metrics/distribution.py` |
-| ☐ | 6.5 | 实现 `moment_stats(r_ref, r_gen) -> dict`：mean/std/skewness/kurtosis，报告参考值、生成值、相对误差 | `metrics/distribution.py` |
-| ☐ | 6.6 | 实现 `evaluate_distribution(r_ref, r_gen, n_bins=100) -> dict`：一键调用以上四个，返回汇总 dict | `metrics/distribution.py` |
-| ☐ | 6.7 | 写自测脚本 `scripts/day6_verify_distribution.py`：① 参考对半切，各指标 ≈ 0；② 加偏移/缩放，指标变大；③ 同种子可复现 | 自测脚本 |
+| ☑ | 6.1 | 建 `generative/metrics/` 目录及 `__init__.py` | 目录 |
+| ☑ | 6.2 | 实现 `pdf_l1_distance(r_ref, r_gen, n_bins=100) -> dict`：相同 bins 归一化直方图，逐 bin 差绝对值乘 bin 宽求和 | `metrics/distribution.py` |
+| ☑ | 6.3 | 实现 `ks_distance(r_ref, r_gen) -> dict`：直接 `scipy.stats.ks_2samp`，取 statistic | `metrics/distribution.py` |
+| ☑ | 6.4 | 实现 `wasserstein_distance(r_ref, r_gen) -> dict`：`scipy.stats.wasserstein_distance` | `metrics/distribution.py` |
+| ☑ | 6.5 | 实现 `moment_stats(r_ref, r_gen) -> dict`：mean/std/skewness/kurtosis，报告参考值、生成值、相对误差 | `metrics/distribution.py` |
+| ☑ | 6.6 | 实现 `evaluate_distribution(r_ref, r_gen, n_bins=100) -> dict`：一键调用以上四个，返回汇总 dict | `metrics/distribution.py` |
+| ☑ | 6.7 | 写自测脚本 `scripts/day6_verify_distribution.py`：① 参考对半切，各指标 ≈ 0；② 加偏移/缩放，指标变大；③ 同种子可复现 | 自测脚本 |
 
 ---
 
