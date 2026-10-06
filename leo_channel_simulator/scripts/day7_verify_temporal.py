@@ -14,7 +14,7 @@
   - 打乱后 ACF/LCR/AFD 误差 > 对半切基线的 5 倍
 
 ======================================================================
-思考题：见 docs/notes/11_自测题库_Day1to7.md 的 Day 7 章
+思考题：见 docs/notes/11_自测题库_Day1to9.md 的 Day 7 章
         （Q7.1~Q7.12，题目 + 参考答案 A7.1~A7.12）
 """
 from __future__ import annotations

@@ -25,9 +25,12 @@
 | 时间 | 任务 | 难度 | 产出 | 关卡 |
 |------|------|------|------|------|
 | Day 6 | L1 静态分布指标 | ★★☆ | `metrics/distribution.py` | 参考对半 ≈ 0、加偏置变大 |
-| Day 7 | L2 时序指标（ACF/LCR/AFD） | ★★★ | `metrics/temporal.py` | Rayleigh LCR 对理论 < 15% |
-| Day 8 | L3 QPSK BER | ★★★ | `metrics/ber.py` | 恒幅信道 BER 对 ½erfc |
-| Day 9 | 泛化指标 + 全库双向自测 | ★★☆ | `metrics/generalization.py` + 自测脚本 | 全部自测通过 |
+| Day 7 | L2 时序指标（ACF/LCR/AFD） | ★★★ | `metrics/temporal.py` ✅ | Rayleigh LCR 对理论 < 15% |
+| Day 8 | L3 QPSK BER | ★★★ | `metrics/ber.py` ✅ | 恒幅信道 BER 对 ½erfc |
+| Day 9 | 泛化指标 + 全库双向自测 | ★★☆ | `metrics/generalization.py` ✅ + `validate_metrics.py` ✅ | 全部自测通过 |
+
+> Day 7/8/9 未单独立任务表，按本文件概要 + notes/09 规格直接实现；
+> 验收细节见 docs/logs/2026-10-01_Day7工作日志.md 与 2026-10-06_Day8_9工作日志.md。
 
 ---
 
@@ -61,7 +64,7 @@
 
 ## Day 7：L2 时序指标（ACF / LCR / AFD）
 
-> 详细任务表见 [Day7_TASKS.md](Day7_TASKS.md)
+> 无细化任务表，按本节概要 + notes/09 第 3 节实现（已完成，见 Day7 工作日志）
 
 **目标**：比较两组样本"随时间起伏的节奏"。
 
@@ -78,7 +81,7 @@
 
 ## Day 8：L3 系统性能（QPSK BER）
 
-> 详细任务表见 [Day8_TASKS.md](Day8_TASKS.md)
+> 无细化任务表，按本节概要 + notes/09 第 4 节实现（已完成，见 Day8_9 工作日志）
 
 **目标**：把生成包络过一遍真实调制解调链路，算 BER 曲线。
 
@@ -96,7 +99,7 @@
 
 ## Day 9：泛化指标 + 全库双向自测
 
-> 详细任务表见 [Day9_TASKS.md](Day9_TASKS.md)
+> 无细化任务表，按本节概要 + notes/09 第 5 节实现（已完成，见 Day8_9 工作日志）
 
 **目标**：泛化指标 + 跑通全部指标的双向自测。
 
@@ -116,12 +119,12 @@
 
 ## 阶段二完成定义（DoD）
 
-- [ ] L1/L2/L3/泛化四类指标全部实现，接口冻结
-- [ ] 双向自测脚本 `scripts/validate_metrics.py` 全绿
-- [ ] 参考 vs 参考各指标 ≈ 0（在统计噪声范围内）
-- [ ] 加偏置样本各指标显著变大（方向正确）
-- [ ] 每个指标函数带 rng 入参，同种子可复现
-- [ ] docs/notes/15_指标库实现说明.md 完成
+- [x] L1/L2/L3/泛化四类指标全部实现，接口冻结（2026-10-06）
+- [x] 双向自测脚本 `scripts/validate_metrics.py` 全绿（22/22，2026-10-06）
+- [x] 参考 vs 参考各指标 ≈ 0（在统计噪声范围内）
+- [x] 加偏置样本各指标显著变大（方向正确）
+- [x] 每个指标函数带 rng 入参，同种子可复现
+- [x] docs/notes/15_指标库实现说明.md 完成
 
 ---
 
