@@ -2,6 +2,24 @@
 __pycache__/
 *.pyc
 
+# 训练产物：模型权重（可由训练脚本重新生成，单个约 14MB）
+*.pt
+*.pth
+
+# 评估参考样本缓存（phase3_eval_cgan.py 首次运行时自动重建，单个约 3.8MB）
+leo_channel_simulator/results/**/ref_*.npz
+
+# 真实卫星 IQ 原始录音（单文件 >500MB，超出 GitHub 100MB 限制；本地保留，需另做外置备份）
+*.raw
+
+# 训练 / 运行日志
+*.log
+
+# 操作系统杂项
+.DS_Store
+Thumbs.db
+desktop.ini
+
 # 仿真输出图片（每次运行重新生成）
 leo_channel_simulator/output/*.png
 
