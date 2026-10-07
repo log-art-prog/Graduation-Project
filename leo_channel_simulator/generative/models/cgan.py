@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 NOISE_DIM = 32
 SEQ_LEN = 1000
@@ -105,3 +106,37 @@ def gradient_penalty(disc: nn.Module, real: torch.Tensor, fake: torch.Tensor,
                                create_graph=True)[0]
     gp = ((grad.view(B, -1).norm(2, dim=1) - 1.0) ** 2).mean()
     return lambda_gp * gp
+
+
+def monotone_condition_penalty(G: nn.Module, z: torch.Tensor,
+                               n_grid: int = 4,
+                               margin: float = 0.0) -> torch.Tensor:
+    """条件单调一致性正则（方案 R）：同一噪声场在高仰角的包络均值不得更低。
+
+    WGAN-GP 损失只逐条件判别真假，不约束条件间顺序；实测（seed42/seed1234）
+    训练中会出现相邻仰角条件均值互相拖拽、Spearman 跌穿。物理先验：仰角越高
+    阴影衰落越弱、包络均值越大。对同一批 z 复用、喂 n_grid 个等距有序条件，
+    对所有逆序对 (lo, hi) 施加铰链惩罚 ReLU(margin - (m_hi - m_lo))。
+
+    Args:
+        z:       (B, noise_dim, L) 一次采样、跨条件复用（隔离条件效应）
+        n_grid:  有序条件网格点数（含端点 -1/+1），默认 4 → 6 个条件对
+        margin:  要求的最小正向间隔（标准化 log 域）；0 表示仅禁止逆序
+    Returns:
+        标量惩罚（逆序对平均，无逆序时为 0）
+    """
+    B = z.shape[0]
+    device = z.device
+    conds = torch.linspace(-1.0, 1.0, n_grid, device=device)
+
+    means = []
+    for cc in conds:
+        x = G(z, torch.full((B,), cc, device=device))
+        means.append(x.mean(dim=(1, 2)))          # 每条样本的全序列均值
+    means = torch.stack(means, dim=1)             # (B, n_grid)
+
+    # diffs[a,b] = m_a - m_b；有效对 hi=a、lo=b 要求 a>b（严格下三角）
+    diffs = means.unsqueeze(2) - means.unsqueeze(1)
+    rows, cols = torch.tril_indices(n_grid, n_grid, offset=-1)
+    violations = F.relu(margin - diffs[:, rows, cols])
+    return violations.mean()

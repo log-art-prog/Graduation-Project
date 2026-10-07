@@ -69,7 +69,16 @@ def log_moments(r: np.ndarray) -> dict:
 
 
 def main() -> None:
-    G, meta = load_generator(ROOT / "checkpoints" / "cgan" / "cgan_final.pt")
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--ckpt", type=str,
+                   default=str(ROOT / "checkpoints" / "cgan" / "cgan_final.pt"))
+    p.add_argument("--tag", type=str, default="",
+                   help="输出文件名后缀（如 _seed1234），避免覆盖默认 run 产物")
+    args = p.parse_args()
+
+    G, meta = load_generator(args.ckpt)
+    tag = args.tag
     rows = []
     ref_means, gen_means = [], []
 
@@ -104,7 +113,7 @@ def main() -> None:
 
     # ---- 汇总表 ----
     keys = list(rows[0].keys())
-    with open(CACHE_DIR / "diag_20deg.csv", "w", newline="", encoding="utf-8") as f:
+    with open(CACHE_DIR / f"diag_20deg{tag}.csv", "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=keys)
         w.writeheader()
         w.writerows(rows)
@@ -135,7 +144,7 @@ def main() -> None:
     for ax in axes:
         ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "phase3_diag_20deg_dist.png", dpi=120)
+    plt.savefig(FIG_DIR / f"phase3_diag_20deg_dist{tag}.png", dpi=120)
     plt.close()
 
     # ---- 图 B：均值-仰角曲线（单调性 / Spearman 归因）----
@@ -149,7 +158,7 @@ def main() -> None:
     ax.legend()
     ax.grid(alpha=0.3)
     plt.tight_layout()
-    plt.savefig(FIG_DIR / "phase3_diag_20deg_meancurve.png", dpi=120)
+    plt.savefig(FIG_DIR / f"phase3_diag_20deg_meancurve{tag}.png", dpi=120)
     plt.close()
 
     # ---- 自动诊断结论 ----
@@ -173,7 +182,7 @@ def main() -> None:
     sp_full = stats.spearmanr(sp_x, gen_means).statistic
     sp_no20 = stats.spearmanr(sp_x[1:], gen_means[1:]).statistic
     print(f"Spearman 全仰角={sp_full:.4f}；剔除 20° 后={sp_no20:.4f}")
-    print(f"\n表已存 {CACHE_DIR / 'diag_20deg.csv'}；图已存 {FIG_DIR}")
+    print(f"\n表已存 {CACHE_DIR / f'diag_20deg{tag}.csv'}；图已存 {FIG_DIR}")
 
 
 if __name__ == "__main__":

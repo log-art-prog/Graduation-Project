@@ -1,15 +1,22 @@
-"""阶段三：CGAN 训练脚本（WGAN-GP + TTUR + EMA）。
+"""阶段三：CGAN 训练脚本（WGAN-GP + TTUR + EMA [+ 条件单调一致性正则]）。
 
 运行（leo_gen 环境）：
-    python -m generative.train_cgan --steps 30000 --seed 42
+    python -m generative.train_cgan --steps 30000 --seed 42                     # 基线复现
+    python -m generative.train_cgan --seed 42 --lambda-mono 5.0 --out-dir checkpoints/cgan_mono  # 方案 R
 
 数据：datasets/corazza_train.npz（10000×1000，float32 全量驻留 GPU，仅 40MB）
-超参：严格按学长论文表 3-2（见 generative/models/cgan.py 文档字符串）。
+基线超参：严格按学长论文表 3-2（见 generative/models/cgan.py 文档字符串）。
 
-产物（checkpoints/cgan/ 下）：
+方案 R（--lambda-mono>0 启用）：双种子复现（seed42/seed1234）证实 WGAN-GP
+存在随种子漂移的条件均值交错（KS≈0.22 的失败仰角分别为 20°/40°）。加入物理
+先验正则 monotone_condition_penalty：同一 z 在有序仰角网格上的包络均值必须
+随仰角非降，铰链惩罚逆序对。该目标函数改动在论文中如实报告，基线权重已冻结
+于 checkpoints/cgan/，对照不受影响。
+
+产物（--out-dir 下）：
   cgan_final.pt       最终权重（含 EMA 生成器，采样用它）
   cgan_step{N}.pt     周期存档
-  train_log.csv       每 100 步的 d_loss / g_loss / w_dist
+  train_log.csv       每 100 步的 d_loss / g_loss / w_dist / mono
   train_curves.png    训练曲线（对标论文图 3-5）
 """
 from __future__ import annotations
@@ -32,7 +39,8 @@ import torch
 from generative.data.dataset import load_dataset
 from generative.models.cgan import (
     EMA, LargeReceptiveFieldDiscriminator, SequenceNoiseFilterGenerator,
-    gradient_penalty, NOISE_DIM, SEQ_LEN,
+    gradient_penalty, monotone_condition_penalty,
+    NOISE_DIM, SEQ_LEN,
 )
 from generative.utils.seed import seed_everything
 
@@ -48,6 +56,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--lr-d", type=float, default=3e-4)
     p.add_argument("--n-critic", type=int, default=5)
     p.add_argument("--lambda-gp", type=float, default=10.0)
+    p.add_argument("--lambda-mono", type=float, default=0.0,
+                   help="条件单调一致性正则权重；0 关闭（基线），方案 R 取 5.0")
+    p.add_argument("--mono-grid", type=int, default=4,
+                   help="单调正则有序条件网格点数（4 → 6 个条件对）")
     p.add_argument("--ema-decay", type=float, default=0.999)
     p.add_argument("--seed", type=int, default=42)
     p.add_argument("--log-every", type=int, default=100)
@@ -98,7 +110,7 @@ def main() -> None:
 
     perm = torch.randperm(n_total, device=device)  # 手动洗牌批采样
     cursor = 0
-    history = {"step": [], "d_loss": [], "g_loss": [], "w_dist": []}
+    history = {"step": [], "d_loss": [], "g_loss": [], "w_dist": [], "mono": []}
     t0 = time.time()
 
     def next_batch(bs: int):
@@ -113,7 +125,7 @@ def main() -> None:
 
     with open(log_path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["step", "d_loss", "g_loss", "w_dist", "elapsed_s"])
+        writer.writerow(["step", "d_loss", "g_loss", "w_dist", "mono", "elapsed_s"])
 
         for step in range(1, args.steps + 1):
             # ---------- D 训练 n_critic 次 ----------
@@ -132,7 +144,15 @@ def main() -> None:
             # ---------- G 训练 1 次 ----------
             _, c_g = next_batch(args.batch_size)
             z = torch.randn(args.batch_size, NOISE_DIM, SEQ_LEN, device=device)
-            g_loss = -D(G(z, c_g), c_g).mean()
+            g_adv = -D(G(z, c_g), c_g).mean()
+            if args.lambda_mono > 0.0:
+                # 同一 z 跨条件复用，惩罚仰角-均值逆序对（方案 R）
+                mono = monotone_condition_penalty(
+                    G, z, n_grid=args.mono_grid, margin=0.0)
+                g_loss = g_adv + args.lambda_mono * mono
+            else:
+                mono = torch.zeros((), device=device)
+                g_loss = g_adv
             opt_g.zero_grad(set_to_none=True)
             g_loss.backward()
             opt_g.step()
@@ -144,25 +164,30 @@ def main() -> None:
                 el = time.time() - t0
                 writer.writerow([step, f"{d_loss.item():.4f}",
                                  f"{g_loss.item():.4f}", f"{w_dist:.4f}",
-                                 f"{el:.1f}"])
+                                 f"{mono.item():.6f}", f"{el:.1f}"])
                 f.flush()
                 history["step"].append(step)
                 history["d_loss"].append(d_loss.item())
                 history["g_loss"].append(g_loss.item())
                 history["w_dist"].append(w_dist)
+                history["mono"].append(mono.item())
                 print(f"step {step:6d}/{args.steps}  d={d_loss.item():+.3f}  "
-                      f"g={g_loss.item():+.3f}  W={w_dist:.4f}  ({el:.0f}s)")
+                      f"g={g_loss.item():+.3f}  W={w_dist:.4f}  "
+                      f"mono={mono.item():.4f}  ({el:.0f}s)")
 
             if step % args.save_every == 0:
                 save_ckpt(out_dir / f"cgan_step{step}.pt", G, D, ema, args, step)
 
     save_ckpt(out_dir / "cgan_final.pt", G, D, ema, args, args.steps)
 
-    # ---- 训练曲线（对标论文图 3-5）----
-    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
-    for ax, key, title in zip(axes,
-                              ["d_loss", "g_loss", "w_dist"],
-                              ["判别器损失", "生成器损失", "Wasserstein 距离估计"]):
+    # ---- 训练曲线（对标论文图 3-5；启用正则时多画 mono 面板）----
+    keys = ["d_loss", "g_loss", "w_dist"]
+    titles = ["判别器损失", "生成器损失", "Wasserstein 距离估计"]
+    if args.lambda_mono > 0.0:
+        keys.append("mono")
+        titles.append(f"单调惩罚（λ={args.lambda_mono:g}）")
+    fig, axes = plt.subplots(1, len(keys), figsize=(5 * len(keys), 4))
+    for ax, key, title in zip(axes, keys, titles):
         ax.plot(history["step"], history[key], lw=0.8)
         ax.set_xlabel("生成器步数")
         ax.set_title(title)
