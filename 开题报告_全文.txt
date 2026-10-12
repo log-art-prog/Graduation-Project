@@ -57,7 +57,7 @@ Ho等[15]提出去噪扩散概率模型（DDPM），将生成过程建模为逐�
 （4）缺乏同频段同场景的公开实测数据。Corazza模型参数依赖特定测量场景拟合，参考数据与真实信道的偏差会传导至生成模型的评估结论。解决措施：依托课题组地面站资源自采实测数据作为补充验证；论文中对数据局限如实说明。
 （5）公平对比的口径控制。两模型对比结论的有效性完全取决于数据、指标、种子口径的一致性。解决措施：统一冻结训练集与评价代码，指标接口冻结后任何变更必须重跑全量回归测试并登记变更日志。
 八、主要参考文献
-[1] 陈万埼. 基于CGAN的NGSO星座星地信道建模方法与仿真[D]. 哈尔滨工业大学, 2026.
+[1] 陈万埼. 基于CGAN的NGSO星座星地信道建模方法与仿真[D]. 哈尔滨: 哈尔滨工业大学, 2026.
 [2] Loo C. A statistical model for a land mobile satellite link[J]. IEEE Transactions on Vehicular Technology, 1985, 34(3): 122-127.
 [3] Lutz E, Cygan D, Dippold M, et al. The land mobile satellite communication channel: recording, statistics, and channel model[J]. IEEE Transactions on Vehicular Technology, 1991, 40(2): 375-386.
 [4] Corazza G E, Vatalaro F. A statistical model for land mobile satellite channels and its application to nongeostationary orbit systems[J]. IEEE Transactions on Vehicular Technology, 1994, 43(3): 738-742.
@@ -68,8 +68,8 @@ Ho等[15]提出去噪扩散概率模型（DDPM），将生成过程建模为逐�
 [9] Baeza V M, Lagunas E, Al-Hraishawi H, et al. An overview of channel models for NGSO satellites[C]//2022 IEEE 96th Vehicular Technology Conference (VTC2022-Fall). IEEE, 2022: 1-6.
 [10] Goodfellow I, Pouget-Abadie J, Mirza M, et al. Generative adversarial nets[C]//Advances in Neural Information Processing Systems, 2014, 27: 2672-2680.
 [11] Xiao H, Tian W, Liu W, et al. ChannelGAN: Deep learning-based channel modeling and generating[J]. IEEE Wireless Communications Letters, 2022, 11(3): 650-654.
-[12] 程芳芳. 基于GAN网络的无线信道建模方法研究[D]. 大连海事大学, 2022.
-[13] 乔艳丽. 低轨卫星移动信道建模与仿真实现[D]. 北京邮电大学, 2023.
+[12] 程芳芳. 基于GAN网络的无线信道建模方法研究[D]. 大连: 大连海事大学, 2022.
+[13] 乔艳丽. 低轨卫星移动信道建模与仿真实现[D]. 北京: 北京邮电大学, 2023.
 [14] Gulrajani I, Ahmed F, Arjovsky M, et al. Improved training of Wasserstein GANs[C]//Advances in Neural Information Processing Systems, 2017, 30: 5767-5777.
 [15] Ho J, Jain A, Abbeel P. Denoising diffusion probabilistic models[C]//Advances in Neural Information Processing Systems, 2020, 33: 6840-6851.
 [16] Song J, Meng C, Ermon S. Denoising diffusion implicit models[C]//International Conference on Learning Representations, 2021.
