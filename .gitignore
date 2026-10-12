@@ -25,3 +25,6 @@ leo_channel_simulator/output/*.png
 
 # 源代码物理快照（Git 内已有对应 commit，物理副本不再入库）
 leo_channel_simulator/snapshots/
+
+# 开题报告引用核查中间产物（由引用证据提取脚本生成，可重新生成）
+开题报告_引用证据.json
